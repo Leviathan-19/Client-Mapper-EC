@@ -9,6 +9,8 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.111.0",
+    "dotenv": "^17.4.2",
     "expo": "~54.0.35",
     "expo-status-bar": "~3.0.9",
     "react": "19.1.0",
