@@ -10,6 +10,7 @@ type AppState = 'loading' | 'unregistered' | 'pending' | 'active' | 'revoked' | 
 export default function App() {
   const [appState, setAppState] = useState<AppState>('loading');
   const [deviceId, setDeviceId] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string>('');
 
   useEffect(() => {
     checkDeviceStatus();
@@ -35,7 +36,7 @@ export default function App() {
       // Consultar estado en Supabase
       const { data, error } = await supabase
         .from('whitelist')
-        .select('estado')
+        .select('estado, usuario_id, usuarios(nombre)')
         .eq('device_id', id)
         .maybeSingle();
 
@@ -45,6 +46,22 @@ export default function App() {
         setAppState('unregistered');
       } else {
         const dbEstado = data.estado;
+        
+        // Guardar nombre del usuario si está disponible
+        if (data.usuarios && (data.usuarios as any).nombre) {
+          setUserName((data.usuarios as any).nombre);
+        } else if (data.usuario_id) {
+          // Si no vino la relación, buscar el nombre por separado
+          const { data: usr, error: usrErr } = await supabase
+            .from('usuarios')
+            .select('nombre')
+            .eq('id', data.usuario_id)
+            .maybeSingle();
+          if (!usrErr && usr && (usr as any).nombre) {
+            setUserName((usr as any).nombre);
+          }
+        }
+
         if (dbEstado === 'activo') {
            setAppState('active');
         } else if (dbEstado === 'pendiente') {
@@ -135,7 +152,9 @@ export default function App() {
   if (appState === 'active') {
     return (
       <View style={styles.container}>
-        <Text style={[styles.title, { color: '#28a745' }]}>¡Bienvenido!</Text>
+        <Text style={[styles.title, { color: '#28a745', textAlign: 'center' }]}>
+          ¡Bienvenido{userName ? `, ${userName}` : ''}!
+        </Text>
         <Text style={styles.statusText}>Dispositivo autorizado correctamente.</Text>
         <Text style={styles.infoText}>Aquí irá la pantalla principal con PowerSync.</Text>
         <StatusBar style="auto" />
