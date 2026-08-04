@@ -1,0 +1,60 @@
+import { Schema, column, Table } from '@powersync/react-native';
+
+const clientes = new Table({
+  empresa_id: column.text,
+  asignado_a: column.text,
+  nombre: column.text,
+  direccion: column.text,
+  latitud: column.real,
+  longitud: column.real,
+  estado_cliente: column.text,
+  created_at: column.text,
+  deleted_at: column.text
+});
+
+const rutas = new Table({
+  empresa_id: column.text,
+  asignado_a: column.text,
+  nombre: column.text,
+  fecha: column.text,
+  estado_ruta: column.text,
+  created_at: column.text
+});
+
+const visitas = new Table({
+  ruta_id: column.text,
+  cliente_id: column.text,
+  fecha_programada: column.text,
+  fecha_realizada: column.text,
+  estado_visita: column.text,
+  latitud: column.real,
+  longitud: column.real,
+  created_at: column.text,
+  deleted_at: column.text
+});
+
+const productos = new Table({
+  empresa_id: column.text,
+  codigo: column.text,
+  nombre: column.text,
+  descripcion: column.text,
+  precio_unitario: column.real,
+  activo: column.integer,
+  created_at: column.text
+});
+
+const visita_productos = new Table({
+  visita_id: column.text,
+  producto_id: column.text,
+  cantidad: column.integer,
+  precio_unitario: column.real,
+  created_at: column.text
+});
+
+export const AppSchemaDefinition = new Schema({
+  clientes,
+  rutas,
+  visitas,
+  productos,
+  visita_productos
+});
