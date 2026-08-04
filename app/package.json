@@ -9,7 +9,11 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@powersync/op-sqlite": "^0.9.16",
+    "@powersync/react-native": "^1.35.10",
+    "@react-native-async-storage/async-storage": "^3.1.1",
     "@supabase/supabase-js": "^2.111.0",
+    "base-64": "^1.0.0",
     "dotenv": "^17.4.2",
     "expo": "~54.0.35",
     "expo-application": "~7.0.8",
@@ -17,7 +21,9 @@
     "expo-status-bar": "~3.0.9",
     "react": "19.1.0",
     "react-native": "0.81.5",
-    "react-native-url-polyfill": "^4.0.0"
+    "react-native-get-random-values": "^2.0.0",
+    "react-native-url-polyfill": "^4.0.0",
+    "text-encoding": "^0.7.0"
   },
   "devDependencies": {
     "@types/react": "~19.1.0",
