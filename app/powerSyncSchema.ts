@@ -51,10 +51,31 @@ const visita_productos = new Table({
   created_at: column.text
 });
 
+// Tabla whitelist
+const whitelist = new Table({
+  device_id: column.text,
+  estado: column.text,
+  descripcion: column.text,
+  created_at: column.text,
+  updated_at: column.text,
+  usuario_id: column.text
+});
+
+// Tabla usuarios
+const usuarios = new Table({
+  empresa_id: column.text,
+  nombre: column.text,
+  rol: column.text,
+  estado: column.text,
+  created_at: column.text
+});
+
 export const AppSchemaDefinition = new Schema({
   clientes,
   rutas,
   visitas,
   productos,
-  visita_productos
+  visita_productos,
+  whitelist,
+  usuarios
 });

@@ -46,28 +46,35 @@ export default function App() {
         setAppState('unregistered');
       } else {
         const dbEstado = data.estado;
-        
-        // Guardar nombre del usuario si está disponible
-        if (data.usuarios && (data.usuarios as any).nombre) {
-          setUserName((data.usuarios as any).nombre);
+
+        // Obtener nombre del usuario
+        let nombre = 'Desconocido';
+        if (data.usuarios && Array.isArray(data.usuarios) && data.usuarios.length > 0) {
+          nombre = (data.usuarios[0] as any).nombre;
         } else if (data.usuario_id) {
-          // Si no vino la relación, buscar el nombre por separado
-          const { data: usr, error: usrErr } = await supabase
+          const { data: usr, error: usrErr, status: usrStatus } = await supabase
             .from('usuarios')
             .select('nombre')
             .eq('id', data.usuario_id)
             .maybeSingle();
-          if (!usrErr && usr && (usr as any).nombre) {
-            setUserName((usr as any).nombre);
+          if (usrErr) {
+            if (usrStatus === 42501) {
+              console.error('❌ PERMISO NEGADO (RLS) al leer tabla usuarios');
+            } else {
+              console.error(`❌ Error al consultar usuarios (status ${usrStatus}):`, usrErr.message);
+            }
+          } else if (usr && (usr as any).nombre) {
+            nombre = (usr as any).nombre;
           }
         }
+        setUserName(nombre);
 
         if (dbEstado === 'activo') {
-           setAppState('active');
+          setAppState('active');
         } else if (dbEstado === 'pendiente') {
-           setAppState('pending');
+          setAppState('pending');
         } else if (dbEstado === 'revocado') {
-           setAppState('revoked');
+          setAppState('revoked');
         } else {
            setAppState('error');
         }
