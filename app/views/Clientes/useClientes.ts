@@ -34,10 +34,10 @@ export const useClientes = () => {
     );
   };
 
-  const updateCliente = async (id: string, nombre: string, direccion: string) => {
+  const updateCliente = async (id: string, nombre: string, direccion: string, latitud?: number, longitud?: number) => {
     await powerSync.execute(
-      `UPDATE clientes SET nombre = ?, direccion = ? WHERE id = ?`,
-      [nombre, direccion, id]
+      `UPDATE clientes SET nombre = ?, direccion = ?, latitud = ?, longitud = ? WHERE id = ?`,
+      [nombre, direccion, latitud || null, longitud || null, id]
     );
   };
 

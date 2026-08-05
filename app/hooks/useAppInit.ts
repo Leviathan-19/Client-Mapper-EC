@@ -27,8 +27,10 @@ export const useAppInit = () => {
 
       setDeviceId(id);
 
-      // Revisar si ya completó el Check Sync inicial
+      // Revisar si ya completó el Check Sync inicial y tiene sesión guardada
       const isSetupComplete = await AsyncStorage.getItem('@isInitialSyncComplete');
+      const savedEmpresaId = await AsyncStorage.getItem('@empresaId');
+      const savedUsuarioId = await AsyncStorage.getItem('@usuarioId');
 
       // Consultar whitelist
       const { data, error } = await supabase
@@ -45,7 +47,7 @@ export const useAppInit = () => {
         const dbEstado = data.estado;
 
         if (dbEstado === 'activo') {
-          if (isSetupComplete === 'true') {
+          if (isSetupComplete === 'true' && savedEmpresaId && savedUsuarioId) {
             setAppState('main_menu');
           } else {
             setAppState('active');

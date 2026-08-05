@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCheckSync } from './useCheckSync';
 import { styles } from './styles';
 import { AppState } from '../../hooks/useAppInit';
+import { useSession } from '../../context/SessionContext';
 
 interface Props {
   deviceId: string | null;
@@ -23,6 +24,8 @@ export const CheckSync: React.FC<Props> = ({ deviceId, setAppState }) => {
     syncError,
     validateSync
   } = useCheckSync(deviceId);
+  
+  const { setSession } = useSession();
 
   const isReady = hasInternet && userAssigned && companyAssigned && syncStatus === 'completed';
   const hasError = !hasInternet || !userAssigned || !companyAssigned || syncStatus === 'error';
@@ -102,8 +105,7 @@ export const CheckSync: React.FC<Props> = ({ deviceId, setAppState }) => {
             style={[styles.buttonRetry, { backgroundColor: '#28a745', marginTop: 15 }]} 
             onPress={async () => {
               await AsyncStorage.setItem('@isInitialSyncComplete', 'true');
-              if (userId) await AsyncStorage.setItem('@usuarioId', userId);
-              if (empresaId) await AsyncStorage.setItem('@empresaId', empresaId);
+              await setSession({ empresaId: empresaId || null, usuarioId: userId || null });
               setAppState('main_menu');
             }}
           >

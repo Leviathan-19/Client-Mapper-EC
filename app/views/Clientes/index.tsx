@@ -11,11 +11,15 @@ export const ClientesList: React.FC<any> = ({ navigation }) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [nombre, setNombre] = useState('');
   const [direccion, setDireccion] = useState('');
+  const [latitud, setLatitud] = useState('');
+  const [longitud, setLongitud] = useState('');
 
   const openCreateModal = () => {
     setEditingId(null);
     setNombre('');
     setDireccion('');
+    setLatitud('');
+    setLongitud('');
     setModalVisible(true);
   };
 
@@ -23,6 +27,8 @@ export const ClientesList: React.FC<any> = ({ navigation }) => {
     setEditingId(cliente.id);
     setNombre(cliente.nombre);
     setDireccion(cliente.direccion || '');
+    setLatitud(cliente.latitud ? cliente.latitud.toString() : '');
+    setLongitud(cliente.longitud ? cliente.longitud.toString() : '');
     setModalVisible(true);
   };
 
@@ -33,10 +39,13 @@ export const ClientesList: React.FC<any> = ({ navigation }) => {
     }
     
     try {
+      const parsedLat = latitud.trim() ? parseFloat(latitud) : undefined;
+      const parsedLon = longitud.trim() ? parseFloat(longitud) : undefined;
+
       if (editingId) {
-        await updateCliente(editingId, nombre, direccion);
+        await updateCliente(editingId, nombre, direccion, parsedLat, parsedLon);
       } else {
-        await createCliente(nombre, direccion);
+        await createCliente(nombre, direccion, parsedLat, parsedLon);
       }
       setModalVisible(false);
     } catch (e: any) {
@@ -106,17 +115,38 @@ export const ClientesList: React.FC<any> = ({ navigation }) => {
           <View style={styles.modalContainer}>
             <Text style={styles.modalTitle}>{editingId ? 'Editar Cliente' : 'Nuevo Cliente'}</Text>
             
+            <Text style={styles.inputLabel}>Nombre (Obligatorio)</Text>
             <TextInput
               style={styles.input}
-              placeholder="Nombre del cliente"
+              placeholder="Ej. Juan Pérez"
               value={nombre}
               onChangeText={setNombre}
             />
+
+            <Text style={styles.inputLabel}>Dirección</Text>
             <TextInput
               style={styles.input}
-              placeholder="Dirección"
+              placeholder="Ej. Av. Principal 123"
               value={direccion}
               onChangeText={setDireccion}
+            />
+
+            <Text style={styles.inputLabel}>Latitud (Opcional)</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Ej. -0.180653"
+              value={latitud}
+              onChangeText={setLatitud}
+              keyboardType="numeric"
+            />
+
+            <Text style={styles.inputLabel}>Longitud (Opcional)</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Ej. -78.467838"
+              value={longitud}
+              onChangeText={setLongitud}
+              keyboardType="numeric"
             />
             
             <View style={styles.modalButtons}>

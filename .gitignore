@@ -4,3 +4,4 @@ commands.txt
 dictionary.txt
 scripts/test-supabase.js
 scripts/test-supabase-join.js
+scripts/TestClient.js

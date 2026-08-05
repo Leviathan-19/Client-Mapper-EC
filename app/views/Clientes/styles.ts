@@ -122,6 +122,13 @@ export const styles = StyleSheet.create({
     color: '#333',
     marginBottom: 15,
   },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#555',
+    marginBottom: 5,
+    marginTop: 10,
+  },
   input: {
     borderWidth: 1,
     borderColor: '#ddd',
