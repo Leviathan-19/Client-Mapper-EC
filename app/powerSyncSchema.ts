@@ -1,5 +1,14 @@
 import { Schema, column, Table } from '@powersync/react-native';
 
+const empresas = new Table({
+  id: column.text,
+  ruc: column.text,
+  direccion: column.text,
+  nombre: column.text,
+  estado: column.text,
+  created_at: column.text
+});
+
 const clientes = new Table({
   empresa_id: column.text,
   asignado_a: column.text,
@@ -71,6 +80,7 @@ const usuarios = new Table({
 });
 
 export const AppSchemaDefinition = new Schema({
+  empresas,
   clientes,
   rutas,
   visitas,
