@@ -100,7 +100,7 @@ export const CheckSync: React.FC<Props> = ({ deviceId, setAppState }) => {
 
       {isReady && (
         <View style={styles.successContainer}>
-          <Text style={styles.successText}>¡Todo listo! Ya puedes trabajar sin conexión. ✈️</Text>
+          <Text style={styles.successText}>¡Todo listo! Ya puedes trabajar sin conexión.</Text>
           <TouchableOpacity 
             style={[styles.buttonRetry, { backgroundColor: '#28a745', marginTop: 15 }]} 
             onPress={async () => {
