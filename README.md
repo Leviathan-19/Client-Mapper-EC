@@ -33,9 +33,15 @@ El núcleo del sistema es su arquitectura **100% Offline-First y Serverless**, l
 ## 📂 Archivos y Estructura del Repositorio
 
 *   [`Arquitectura_ERP_Visitas.md`](./Arquitectura_ERP_Visitas.md): Flujo de trabajo, geolocalización, diagramas y fases de desarrollo del proyecto.
-*   [`supabase.txt`](./supabase.txt): Scripts DDL completos (tablas, llaves primarias/foráneas, y políticas RLS iniciales).
-*   [`dictionary.txt`](./dictionary.txt): Diccionario de datos exhaustivo de las tablas y campos del ERP.
+*   `/docs`: Documentación y configuración.
+    *   [`supabase.txt`](./docs/supabase.txt): Scripts DDL completos (tablas, llaves primarias/foráneas, y políticas RLS para lectura y escritura).
+    *   [`dictionary.txt`](./docs/dictionary.txt): Diccionario de datos exhaustivo de las tablas y campos del ERP.
+    *   [`commands.txt`](./docs/commands.txt): Comandos comunes para desarrollo y pruebas.
+*   `/scripts`: Scripts utilitarios de prueba y mantenimiento.
+    *   [`test-supabase.js`](./scripts/test-supabase.js): Prueba de conexión básica.
+    *   [`test-supabase-join.js`](./scripts/test-supabase-join.js): Prueba de joins relacionales para validación offline-first.
 *   `/app`: Código fuente del cliente móvil Expo / React Native.
+    *   `/assets`: Archivos estáticos como el logotipo de la aplicación (`logo_clientmapper_purple.png`).
     *   `App.tsx`: Pantalla principal, lógica de whitelist, validación de internet/usuarios y panel de sincronización.
     *   `powerSyncSchema.ts`: Definición del esquema local de tablas SQLite para sincronización offline.
     *   `powerSync.ts`: Inicialización de `PowerSyncDatabase` con el adaptador de alto rendimiento `op-sqlite` y el conector JWT de Supabase.
