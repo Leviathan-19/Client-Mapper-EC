@@ -16,7 +16,9 @@ export const CheckSync: React.FC<Props> = ({ deviceId, setAppState }) => {
     userAssigned,
     companyAssigned,
     userName,
+    userId,
     companyName,
+    empresaId,
     syncStatus,
     syncError,
     validateSync
@@ -100,6 +102,8 @@ export const CheckSync: React.FC<Props> = ({ deviceId, setAppState }) => {
             style={[styles.buttonRetry, { backgroundColor: '#28a745', marginTop: 15 }]} 
             onPress={async () => {
               await AsyncStorage.setItem('@isInitialSyncComplete', 'true');
+              if (userId) await AsyncStorage.setItem('@usuarioId', userId);
+              if (empresaId) await AsyncStorage.setItem('@empresaId', empresaId);
               setAppState('main_menu');
             }}
           >

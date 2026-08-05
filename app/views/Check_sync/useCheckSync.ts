@@ -7,7 +7,9 @@ export const useCheckSync = (deviceId: string | null) => {
   const [userAssigned, setUserAssigned] = useState<boolean | null>(null);
   const [companyAssigned, setCompanyAssigned] = useState<boolean | null>(null);
   const [userName, setUserName] = useState<string>('');
+  const [userId, setUserId] = useState<string | null>(null);
   const [companyName, setCompanyName] = useState<string>('');
+  const [empresaId, setEmpresaId] = useState<string | null>(null);
   const [syncStatus, setSyncStatus] = useState<'pending' | 'syncing' | 'completed' | 'error'>('pending');
   const [syncError, setSyncError] = useState<string>('');
 
@@ -93,7 +95,9 @@ export const useCheckSync = (deviceId: string | null) => {
         const eNombre = empObj?.nombre || null;
 
         setUserName(uNombre || 'Desconocido');
+        setUserId(uId);
         setCompanyName(eNombre || 'Sin Empresa');
+        setEmpresaId(eId);
 
         const isUserValid = uNombre !== null && uNombre !== 'Desconocido' && uId !== null;
         const isCompanyValid = eNombre !== null && eId !== null;
@@ -121,7 +125,9 @@ export const useCheckSync = (deviceId: string | null) => {
     userAssigned,
     companyAssigned,
     userName,
+    userId,
     companyName,
+    empresaId,
     syncStatus,
     syncError,
     validateSync
