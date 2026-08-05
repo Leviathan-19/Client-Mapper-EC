@@ -13,14 +13,14 @@ export const ProfileNavbar: React.FC = () => {
     const fetchDatos = async () => {
       try {
         if (usuarioId) {
-          const userRes = await powerSync.getOptional(
+          const userRes = await powerSync.getOptional<{ nombre: string }>(
             `SELECT nombre FROM usuarios WHERE id = ?`,
             [usuarioId]
           );
           if (userRes) setNombre(userRes.nombre);
         }
         if (empresaId) {
-          const empRes = await powerSync.getOptional(
+          const empRes = await powerSync.getOptional<{ nombre: string }>(
             `SELECT nombre FROM empresas WHERE id = ?`,
             [empresaId]
           );

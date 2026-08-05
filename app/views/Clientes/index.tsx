@@ -158,11 +158,13 @@ export const ClientesList: React.FC<any> = ({ navigation }) => {
               <Picker
                 selectedValue={estadoCliente}
                 onValueChange={(itemValue) => setEstadoCliente(itemValue)}
-                style={{ height: 50, width: '100%' }}
+                style={{ height: 50, width: '100%', color: '#333' }}
+                dropdownIconColor="#333"
+                mode="dropdown"
               >
-                <Picker.Item label="Activo" value="activo" />
-                <Picker.Item label="Inactivo" value="inactivo" />
-                <Picker.Item label="Prospecto" value="prospecto" />
+                <Picker.Item label="Activo" value="activo" color="#000" />
+                <Picker.Item label="Inactivo" value="inactivo" color="#000" />
+                <Picker.Item label="Prospecto" value="prospecto" color="#000" />
               </Picker>
             </View>
             

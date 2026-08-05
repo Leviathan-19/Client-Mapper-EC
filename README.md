@@ -40,6 +40,12 @@ El núcleo del sistema es su arquitectura **100% Offline-First y Serverless**, l
 *   Auto-generación de IDs universales (`UUID v4`) del lado del cliente al crear registros sin internet.
 *   Lógica de "Tombstone" (Soft Delete en SQLite) delegada a PowerSync para eliminar registros de la nube al recuperar conectividad.
 
+### 🟢 Fase 6: Autenticación, Sincronización Real y UI Global (Completado)
+*   **PowerSync Cloud**: Configuración de instancia de PowerSync con publicación de PostgreSQL y vinculación nativa (`.env`).
+*   **Autenticación Anónima**: Integración de `supabase.auth.signInAnonymously()` para emisión de JWT legales sin requerir cuentas de correo, permitiendo a PowerSync autenticarse mediante Supabase Auth.
+*   **Subida a la Nube (Upload Data)**: Implementación de la cola de transacciones locales `getNextCrudTransaction()` para mapear operaciones de SQLite a mutaciones `REST` de Supabase de manera automática e invisible.
+*   **UI Estática y Nativa**: Creación de un `ProfileNavbar` que persiste globalmente en la navegación extrayendo datos dinámicos, y sustitución de inputs estáticos por controles nativos (`@react-native-picker/picker`).
+
 ---
 
 ## 📂 Archivos y Estructura del Repositorio
