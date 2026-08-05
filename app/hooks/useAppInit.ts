@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Platform, Alert } from 'react-native';
 import * as Application from 'expo-application';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../supabaseClient';
 
-export type AppState = 'loading' | 'unregistered' | 'pending' | 'active' | 'revoked' | 'error';
+export type AppState = 'loading' | 'unregistered' | 'pending' | 'active' | 'main_menu' | 'revoked' | 'error';
 
 export const useAppInit = () => {
   const [appState, setAppState] = useState<AppState>('loading');
@@ -26,6 +27,9 @@ export const useAppInit = () => {
 
       setDeviceId(id);
 
+      // Revisar si ya completó el Check Sync inicial
+      const isSetupComplete = await AsyncStorage.getItem('@isInitialSyncComplete');
+
       // Consultar whitelist
       const { data, error } = await supabase
         .from('whitelist')
@@ -41,7 +45,11 @@ export const useAppInit = () => {
         const dbEstado = data.estado;
 
         if (dbEstado === 'activo') {
-          setAppState('active');
+          if (isSetupComplete === 'true') {
+            setAppState('main_menu');
+          } else {
+            setAppState('active');
+          }
         } else if (dbEstado === 'pendiente') {
           setAppState('pending');
         } else if (dbEstado === 'revocado') {

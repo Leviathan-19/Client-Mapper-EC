@@ -1,13 +1,16 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCheckSync } from './useCheckSync';
 import { styles } from './styles';
+import { AppState } from '../../hooks/useAppInit';
 
 interface Props {
   deviceId: string | null;
+  setAppState: React.Dispatch<React.SetStateAction<AppState>>;
 }
 
-export const CheckSync: React.FC<Props> = ({ deviceId }) => {
+export const CheckSync: React.FC<Props> = ({ deviceId, setAppState }) => {
   const {
     hasInternet,
     userAssigned,
@@ -93,6 +96,15 @@ export const CheckSync: React.FC<Props> = ({ deviceId }) => {
       {isReady && (
         <View style={styles.successContainer}>
           <Text style={styles.successText}>¡Todo listo! Ya puedes trabajar sin conexión. ✈️</Text>
+          <TouchableOpacity 
+            style={[styles.buttonRetry, { backgroundColor: '#28a745', marginTop: 15 }]} 
+            onPress={async () => {
+              await AsyncStorage.setItem('@isInitialSyncComplete', 'true');
+              setAppState('main_menu');
+            }}
+          >
+            <Text style={styles.buttonRetryText}>Continuar</Text>
+          </TouchableOpacity>
         </View>
       )}
 
