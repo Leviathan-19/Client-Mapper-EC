@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { useMainMenu } from './useMainMenu';
 import { styles } from './styles';
 
-export const MainMenu: React.FC = () => {
+export const MainMenu: React.FC<any> = ({ navigation }) => {
   const { isOnline } = useMainMenu();
 
   return (
@@ -19,7 +19,7 @@ export const MainMenu: React.FC = () => {
 
       {/* Grid de Opciones */}
       <ScrollView contentContainerStyle={styles.grid}>
-        <TouchableOpacity style={styles.card}>
+        <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('Clientes')}>
           <Text style={{ fontSize: 32 }}>👥</Text>
           <Text style={styles.cardTitle}>Clientes</Text>
           <Text style={styles.cardSubtitle}>Gestionar cartera</Text>
