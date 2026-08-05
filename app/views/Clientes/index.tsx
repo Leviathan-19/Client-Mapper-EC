@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, FlatList, Modal, TextInput, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, Modal, TextInput, Alert } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
 import { useClientes, Cliente } from './useClientes';
 import { styles } from './styles';
 
@@ -13,6 +14,7 @@ export const ClientesList: React.FC<any> = ({ navigation }) => {
   const [direccion, setDireccion] = useState('');
   const [latitud, setLatitud] = useState('');
   const [longitud, setLongitud] = useState('');
+  const [estadoCliente, setEstadoCliente] = useState('activo');
 
   const openCreateModal = () => {
     setEditingId(null);
@@ -20,6 +22,7 @@ export const ClientesList: React.FC<any> = ({ navigation }) => {
     setDireccion('');
     setLatitud('');
     setLongitud('');
+    setEstadoCliente('activo');
     setModalVisible(true);
   };
 
@@ -29,6 +32,7 @@ export const ClientesList: React.FC<any> = ({ navigation }) => {
     setDireccion(cliente.direccion || '');
     setLatitud(cliente.latitud ? cliente.latitud.toString() : '');
     setLongitud(cliente.longitud ? cliente.longitud.toString() : '');
+    setEstadoCliente(cliente.estado_cliente || 'activo');
     setModalVisible(true);
   };
 
@@ -43,9 +47,9 @@ export const ClientesList: React.FC<any> = ({ navigation }) => {
       const parsedLon = longitud.trim() ? parseFloat(longitud) : undefined;
 
       if (editingId) {
-        await updateCliente(editingId, nombre, direccion, parsedLat, parsedLon);
+        await updateCliente(editingId, nombre, direccion, parsedLat, parsedLon, estadoCliente);
       } else {
-        await createCliente(nombre, direccion, parsedLat, parsedLon);
+        await createCliente(nombre, direccion, parsedLat, parsedLon, estadoCliente);
       }
       setModalVisible(false);
     } catch (e: any) {
@@ -148,6 +152,19 @@ export const ClientesList: React.FC<any> = ({ navigation }) => {
               onChangeText={setLongitud}
               keyboardType="numeric"
             />
+
+            <Text style={styles.inputLabel}>Estado del Cliente</Text>
+            <View style={[styles.input, { padding: 0, justifyContent: 'center' }]}>
+              <Picker
+                selectedValue={estadoCliente}
+                onValueChange={(itemValue) => setEstadoCliente(itemValue)}
+                style={{ height: 50, width: '100%' }}
+              >
+                <Picker.Item label="Activo" value="activo" />
+                <Picker.Item label="Inactivo" value="inactivo" />
+                <Picker.Item label="Prospecto" value="prospecto" />
+              </Picker>
+            </View>
             
             <View style={styles.modalButtons}>
               <TouchableOpacity style={[styles.modalButton, styles.cancelButton]} onPress={() => setModalVisible(false)}>

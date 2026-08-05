@@ -28,12 +28,41 @@ export const connector = {
   fetchCredentials: async () => {
     return {
       // Reemplaza con tu endpoint de PowerSync Service
-      endpoint: process.env.POWERSYNC_ENDPOINT ?? 'https://tu-endpoint-powersync.com',
+      endpoint: process.env.EXPO_PUBLIC_POWERSYNC_URL ?? 'https://tu-endpoint-powersync.com',
       token: await getSupabaseToken(),
     };
   },
   uploadData: async (db: any) => {
-    // Aquí implementaremos el envío de cambios locales a Supabase más adelante.
+    const transaction = await db.getNextCrudTransaction();
+    if (!transaction) return;
+
+    let lastOp = null;
+    try {
+      for (const op of transaction.crud) {
+        lastOp = op;
+        const table = op.table;
+        let error = null;
+
+        if (op.op === 'PUT') {
+          const { error: err } = await supabase.from(table).upsert({ ...op.opData, id: op.id });
+          error = err;
+        } else if (op.op === 'PATCH') {
+          const { error: err } = await supabase.from(table).update(op.opData).eq('id', op.id);
+          error = err;
+        } else if (op.op === 'DELETE') {
+          const { error: err } = await supabase.from(table).delete().eq('id', op.id);
+          error = err;
+        }
+
+        if (error) {
+          throw new Error(error.message);
+        }
+      }
+      
+      await transaction.complete();
+    } catch (ex: any) {
+      console.error(`Error de sincronización en la tabla ${lastOp?.table}:`, ex.message);
+    }
   },
 };
 

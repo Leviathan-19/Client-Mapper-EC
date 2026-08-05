@@ -23,21 +23,21 @@ export const useClientes = () => {
     [empresaId]
   );
 
-  const createCliente = async (nombre: string, direccion: string, latitud?: number, longitud?: number) => {
+  const createCliente = async (nombre: string, direccion: string, latitud?: number, longitud?: number, estado_cliente: string = 'activo') => {
     if (!empresaId || !usuarioId) throw new Error('No hay sesión activa');
     
     const id = uuidv4();
     await powerSync.execute(
       `INSERT INTO clientes (id, empresa_id, asignado_a, nombre, direccion, latitud, longitud, estado_cliente) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, 'activo')`,
-      [id, empresaId, usuarioId, nombre, direccion, latitud || null, longitud || null]
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [id, empresaId, usuarioId, nombre, direccion, latitud || null, longitud || null, estado_cliente]
     );
   };
 
-  const updateCliente = async (id: string, nombre: string, direccion: string, latitud?: number, longitud?: number) => {
+  const updateCliente = async (id: string, nombre: string, direccion: string, latitud?: number, longitud?: number, estado_cliente: string = 'activo') => {
     await powerSync.execute(
-      `UPDATE clientes SET nombre = ?, direccion = ?, latitud = ?, longitud = ? WHERE id = ?`,
-      [nombre, direccion, latitud || null, longitud || null, id]
+      `UPDATE clientes SET nombre = ?, direccion = ?, latitud = ?, longitud = ?, estado_cliente = ? WHERE id = ?`,
+      [nombre, direccion, latitud || null, longitud || null, estado_cliente, id]
     );
   };
 

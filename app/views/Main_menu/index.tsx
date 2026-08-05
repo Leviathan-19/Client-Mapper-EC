@@ -8,41 +8,42 @@ export const MainMenu: React.FC<any> = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      {/* Header con Indicador de Red */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>ClientMapper ERP</Text>
-        <View style={styles.networkIndicator}>
-          <View style={[styles.dot, { backgroundColor: isOnline ? '#28a745' : '#dc3545' }]} />
-          <Text style={styles.networkText}>{isOnline ? 'Online' : 'Offline'}</Text>
+      <View style={styles.content}>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>ClientMapper ERP</Text>
+          <View style={styles.networkIndicator}>
+            <View style={[styles.dot, { backgroundColor: isOnline ? '#28a745' : '#dc3545' }]} />
+            <Text style={styles.networkText}>{isOnline ? 'Online' : 'Offline'}</Text>
+          </View>
         </View>
+
+        {/* Grid de Opciones */}
+        <ScrollView contentContainerStyle={styles.grid}>
+          <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('Clientes')}>
+            <Text style={{ fontSize: 32 }}>👥</Text>
+            <Text style={styles.cardTitle}>Clientes</Text>
+            <Text style={styles.cardSubtitle}>Gestionar cartera</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.card}>
+            <Text style={{ fontSize: 32 }}>🗺️</Text>
+            <Text style={styles.cardTitle}>Rutas</Text>
+            <Text style={styles.cardSubtitle}>Ver planificaciones</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.card}>
+            <Text style={{ fontSize: 32 }}>📍</Text>
+            <Text style={styles.cardTitle}>Visitas</Text>
+            <Text style={styles.cardSubtitle}>Registrar actividad</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.card}>
+            <Text style={{ fontSize: 32 }}>📦</Text>
+            <Text style={styles.cardTitle}>Productos</Text>
+            <Text style={styles.cardSubtitle}>Catálogo</Text>
+          </TouchableOpacity>
+        </ScrollView>
       </View>
-
-      {/* Grid de Opciones */}
-      <ScrollView contentContainerStyle={styles.grid}>
-        <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('Clientes')}>
-          <Text style={{ fontSize: 32 }}>👥</Text>
-          <Text style={styles.cardTitle}>Clientes</Text>
-          <Text style={styles.cardSubtitle}>Gestionar cartera</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.card}>
-          <Text style={{ fontSize: 32 }}>🗺️</Text>
-          <Text style={styles.cardTitle}>Rutas</Text>
-          <Text style={styles.cardSubtitle}>Ver planificaciones</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.card}>
-          <Text style={{ fontSize: 32 }}>📍</Text>
-          <Text style={styles.cardTitle}>Visitas</Text>
-          <Text style={styles.cardSubtitle}>Registrar actividad</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.card}>
-          <Text style={{ fontSize: 32 }}>📦</Text>
-          <Text style={styles.cardTitle}>Productos</Text>
-          <Text style={styles.cardSubtitle}>Catálogo</Text>
-        </TouchableOpacity>
-      </ScrollView>
     </View>
   );
 };

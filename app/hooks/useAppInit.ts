@@ -47,6 +47,13 @@ export const useAppInit = () => {
         const dbEstado = data.estado;
 
         if (dbEstado === 'activo') {
+          // Autenticar anónimamente para obtener un JWT válido para PowerSync
+          const { error: authError } = await supabase.auth.signInAnonymously();
+          if (authError) {
+            console.error('Error en autenticación anónima:', authError);
+            // Podemos continuar de todos modos, pero PowerSync fallará en la nube
+          }
+
           if (isSetupComplete === 'true' && savedEmpresaId && savedUsuarioId) {
             setAppState('main_menu');
           } else {

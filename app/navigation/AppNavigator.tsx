@@ -7,6 +7,7 @@ import { CheckSync } from '../views/Check_sync';
 import { MainMenu } from '../views/Main_menu';
 import { ClientesList } from '../views/Clientes';
 import { ActivityIndicator, View } from 'react-native';
+import { ProfileNavbar } from '../views/Main_menu/ProfileNavbar';
 
 const Stack = createNativeStackNavigator();
 
@@ -22,8 +23,10 @@ export const AppNavigator = () => {
   }
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <View style={{ flex: 1 }}>
+      {appState === 'main_menu' && <ProfileNavbar />}
+      <NavigationContainer>
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
         {appState === 'main_menu' ? (
           // Stack Principal
           <>
@@ -50,6 +53,7 @@ export const AppNavigator = () => {
           </Stack.Screen>
         )}
       </Stack.Navigator>
-    </NavigationContainer>
+      </NavigationContainer>
+    </View>
   );
 };
