@@ -28,6 +28,18 @@ El núcleo del sistema es su arquitectura **100% Offline-First y Serverless**, l
 *   **Sincronización Automatizada**: Si todas las validaciones son exitosas, la app inicializa la base SQLite local (`powerSync.init()`) e inicia la sincronización de red (`startSync()`) descargando los datos locales de forma segura y aislada por empresa.
 *   **UI Premium**: Panel de bienvenida interactivo que muestra el estado en tiempo real de cada paso y botón de reintento en caso de error.
 
+### 🟢 Fase 4: Enrutamiento y Contexto de Sesión (Completado)
+*   Instalación y configuración de **React Navigation** (`@react-navigation/native-stack`) para transiciones nativas y manejo del historial de navegación (botón Atrás).
+*   Implementación de `SessionContext` para lectura y persistencia de `usuario_id` y `empresa_id` usando `AsyncStorage`.
+*   **Bypass de Sincronización**: Almacenamiento del estado `isInitialSyncComplete` para saltar la pantalla de `Check_sync` en inicios posteriores y enrutar directamente al `MainMenu`.
+*   **Menú Principal Moderno**: Cuadrícula de opciones (Clientes, Rutas, Visitas, Productos) y un indicador semafórico que monitorea la conexión a internet cada 30 segundos.
+
+### 🟢 Fase 5: Módulo CRUD de Clientes Offline-First (Completado)
+*   Integración total de operaciones CRUD mediante `powerSync.execute()` para inserciones y modificaciones 100% locales en SQLite.
+*   Consultas ultra-rápidas y reactivas usando `usePowerSyncWatchedQuery`.
+*   Auto-generación de IDs universales (`UUID v4`) del lado del cliente al crear registros sin internet.
+*   Lógica de "Tombstone" (Soft Delete en SQLite) delegada a PowerSync para eliminar registros de la nube al recuperar conectividad.
+
 ---
 
 ## 📂 Archivos y Estructura del Repositorio
@@ -42,7 +54,15 @@ El núcleo del sistema es su arquitectura **100% Offline-First y Serverless**, l
     *   [`test-supabase-join.js`](./scripts/test-supabase-join.js): Prueba de joins relacionales para validación offline-first.
 *   `/app`: Código fuente del cliente móvil Expo / React Native.
     *   `/assets`: Archivos estáticos como el logotipo de la aplicación (`logo_clientmapper_purple.png`).
-    *   `App.tsx`: Pantalla principal, lógica de whitelist, validación de internet/usuarios y panel de sincronización.
+    *   `/context`: `SessionContext.tsx` para proveer los datos de la sesión offline a todas las vistas.
+    *   `/hooks`: Lógica de inicialización (`useAppInit.ts`).
+    *   `/navigation`: Configuración del stack nativo (`AppNavigator.tsx`).
+    *   `/views`: Componentes segmentados por dominios (diseño, vista, lógica):
+        *   `Validation_whitelist`: UI de bloqueo y solicitud de acceso.
+        *   `Check_sync`: Tablero de estado inicial y descarga de SQLite.
+        *   `Main_menu`: Menú central del ERP y monitoreo de red.
+        *   `Clientes`: CRUD robusto offline para gestión de la cartera.
+    *   `App.tsx`: Punto de entrada que envuelve los Providers.
     *   `powerSyncSchema.ts`: Definición del esquema local de tablas SQLite para sincronización offline.
     *   `powerSync.ts`: Inicialización de `PowerSyncDatabase` con el adaptador de alto rendimiento `op-sqlite` y el conector JWT de Supabase.
 
