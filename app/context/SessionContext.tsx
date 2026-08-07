@@ -4,6 +4,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 interface SessionData {
   empresaId: string | null;
   usuarioId: string | null;
+  userName: string | null;
+  empresaNombre: string | null;
 }
 
 interface SessionContextType extends SessionData {
@@ -15,7 +17,7 @@ interface SessionContextType extends SessionData {
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
 
 export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [session, setSessionState] = useState<SessionData>({ empresaId: null, usuarioId: null });
+  const [session, setSessionState] = useState<SessionData>({ empresaId: null, usuarioId: null, userName: null, empresaNombre: null });
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -23,7 +25,9 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
       try {
         const empresaId = await AsyncStorage.getItem('@empresaId');
         const usuarioId = await AsyncStorage.getItem('@usuarioId');
-        setSessionState({ empresaId, usuarioId });
+        const userName = await AsyncStorage.getItem('@userName');
+        const empresaNombre = await AsyncStorage.getItem('@empresaNombre');
+        setSessionState({ empresaId, usuarioId, userName, empresaNombre });
       } catch (e) {
         console.error('Error loading session:', e);
       } finally {
@@ -37,6 +41,8 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
     try {
       if (data.empresaId) await AsyncStorage.setItem('@empresaId', data.empresaId);
       if (data.usuarioId) await AsyncStorage.setItem('@usuarioId', data.usuarioId);
+      if (data.userName) await AsyncStorage.setItem('@userName', data.userName);
+      if (data.empresaNombre) await AsyncStorage.setItem('@empresaNombre', data.empresaNombre);
       setSessionState(data);
     } catch (e) {
       console.error('Error saving session:', e);
@@ -47,7 +53,9 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
     try {
       await AsyncStorage.removeItem('@empresaId');
       await AsyncStorage.removeItem('@usuarioId');
-      setSessionState({ empresaId: null, usuarioId: null });
+      await AsyncStorage.removeItem('@userName');
+      await AsyncStorage.removeItem('@empresaNombre');
+      setSessionState({ empresaId: null, usuarioId: null, userName: null, empresaNombre: null });
     } catch (e) {
       console.error('Error clearing session:', e);
     }

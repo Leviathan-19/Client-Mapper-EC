@@ -105,7 +105,12 @@ export const CheckSync: React.FC<Props> = ({ deviceId, setAppState }) => {
             style={[styles.buttonRetry, { backgroundColor: '#28a745', marginTop: 15 }]} 
             onPress={async () => {
               await AsyncStorage.setItem('@isInitialSyncComplete', 'true');
-              await setSession({ empresaId: empresaId || null, usuarioId: userId || null });
+              await setSession({
+                empresaId: empresaId || null,
+                usuarioId: userId || null,
+                userName: userName || null,
+                empresaNombre: companyName || null,
+              });
               setAppState('main_menu');
             }}
           >
