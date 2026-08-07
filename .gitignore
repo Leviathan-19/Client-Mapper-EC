@@ -2,7 +2,7 @@ Arquitectura_ERP_Visitas.md
 supabase.txt
 commands.txt
 dictionary.txt
-scripts/test-supabase.js
-scripts/test-supabase-join.js
-scripts/TestClient.js
-deploy-syncpower.png
+scripts/*
+node_modules
+package-lock.json
+package.json
