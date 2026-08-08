@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, TouchableOpacity, FlatList, Modal, TextInput, Alert } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { useClientes, Cliente } from './useClientes';
@@ -6,6 +6,9 @@ import { styles } from './styles';
 
 export const ClientesList: React.FC<any> = ({ navigation }) => {
   const { clientes, createCliente, updateCliente, deleteCliente } = useClientes();
+
+  // filteredClientes definition moved after state declarations
+
   const [modalVisible, setModalVisible] = useState(false);
   
   // Form State
@@ -15,7 +18,8 @@ export const ClientesList: React.FC<any> = ({ navigation }) => {
   const [latitud, setLatitud] = useState('');
   const [longitud, setLongitud] = useState('');
   const [estadoCliente, setEstadoCliente] = useState('activo');
-
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterStatus, setFilterStatus] = useState('todos');
   const openCreateModal = () => {
     setEditingId(null);
     setNombre('');
@@ -91,7 +95,17 @@ export const ClientesList: React.FC<any> = ({ navigation }) => {
       </View>
     </View>
   );
-
+  const filteredClientes = useMemo(() => {
+    return clientes.filter(c => {
+      const matchesSearch =
+        c.nombre?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        c.cedula?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        c.correo?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        c.telefono?.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesEstado = filterStatus === 'todos' ? true : c.estado_cliente === filterStatus;
+      return matchesSearch && matchesEstado;
+    });
+  }, [clientes, searchQuery, filterStatus]);
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -101,8 +115,24 @@ export const ClientesList: React.FC<any> = ({ navigation }) => {
         <Text style={styles.headerTitle}>Mis Clientes</Text>
       </View>
 
+      <TextInput
+        style={styles.searchBar}
+        placeholder="Buscar clientes..."
+        value={searchQuery}
+        onChangeText={setSearchQuery}
+      />
+
+      <View style={styles.filterPicker}>
+        <Picker selectedValue={filterStatus} onValueChange={(itemValue) => setFilterStatus(itemValue)}>
+          <Picker.Item label="Todos" value="todos" />
+          <Picker.Item label="Activo" value="activo" />
+          <Picker.Item label="Inactivo" value="inactivo" />
+          <Picker.Item label="Prospecto" value="prospecto" />
+        </Picker>
+      </View>
+
       <FlatList
-        data={clientes}
+        data={filteredClientes}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         contentContainerStyle={styles.list}

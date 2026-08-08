@@ -103,6 +103,18 @@ export const styles = StyleSheet.create({
     lineHeight: 32,
   },
   // Modal styles
+// Search bar and filter picker styles
+searchBar: {
+  backgroundColor: '#fff',
+  padding: 8,
+  borderRadius: 5,
+  marginBottom: 8,
+},
+filterPicker: {
+  backgroundColor: '#fff',
+  borderRadius: 5,
+  marginBottom: 8,
+},
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
