@@ -5,7 +5,7 @@ import { useAppInit } from '../hooks/useAppInit';
 import { ValidationWhitelist } from '../views/Validation_whitelist';
 import { CheckSync } from '../views/Check_sync';
 import { MainMenu } from '../views/Main_menu';
-import { ClientesList } from '../views/Clientes';
+import { ClientesList } from '../views/Main_menu/Customers';
 import { ActivityIndicator, View } from 'react-native';
 import { ProfileNavbar } from '../views/Main_menu/ProfileNavbar';
 
