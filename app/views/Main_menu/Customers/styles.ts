@@ -117,7 +117,7 @@ filterPicker: {
 },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(255, 255, 255, 1)255, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -134,6 +134,7 @@ filterPicker: {
     color: '#333',
     marginBottom: 15,
   },
+  //texto del label del modal
   inputLabel: {
     fontSize: 14,
     fontWeight: '600',
@@ -143,7 +144,7 @@ filterPicker: {
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: '#000000ff',
     borderRadius: 8,
     padding: 12,
     marginBottom: 15,

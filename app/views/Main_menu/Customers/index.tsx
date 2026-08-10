@@ -20,6 +20,9 @@ export const ClientesList: React.FC<any> = ({ navigation }) => {
   const [estadoCliente, setEstadoCliente] = useState('activo');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('todos');
+  const [cedula, setCedula] = useState('');
+  const [correo, setCorreo] = useState('');
+  const [telefono, setTelefono] = useState('');
   const openCreateModal = () => {
     setEditingId(null);
     setNombre('');
@@ -36,6 +39,9 @@ export const ClientesList: React.FC<any> = ({ navigation }) => {
     setDireccion(cliente.direccion || '');
     setLatitud(cliente.latitud ? cliente.latitud.toString() : '');
     setLongitud(cliente.longitud ? cliente.longitud.toString() : '');
+    setCedula(cliente.cedula || '');
+    setCorreo(cliente.correo || '');
+    setTelefono(cliente.telefono || '');
     setEstadoCliente(cliente.estado_cliente || 'activo');
     setModalVisible(true);
   };
@@ -153,34 +159,45 @@ export const ClientesList: React.FC<any> = ({ navigation }) => {
             <TextInput
               style={styles.input}
               placeholder="Ej. Juan Pérez"
+              placeholderTextColor="#000000ff"
               value={nombre}
               onChangeText={setNombre}
             />
 
+            <Text style={styles.inputLabel}>Cedula</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Ej. 1718671662"
+              placeholderTextColor="#000000ff"
+              value={cedula}
+              onChangeText={setCedula}
+              keyboardType="numeric"
+            />
+
+            <Text style={styles.inputLabel}>telefono</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Ej. 0987654321"
+              placeholderTextColor="#000000ff"
+              value={telefono}
+              onChangeText={setTelefono}
+              keyboardType="numeric"
+            />
+            <Text style={styles.inputLabel}>Correo</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Ej.correo@gmail.com"
+              placeholderTextColor="#000000ff"
+              value={correo}
+              onChangeText={setCorreo}
+            />
             <Text style={styles.inputLabel}>Dirección</Text>
             <TextInput
               style={styles.input}
               placeholder="Ej. Av. Principal 123"
+              placeholderTextColor="#000000ff"
               value={direccion}
               onChangeText={setDireccion}
-            />
-
-            <Text style={styles.inputLabel}>Latitud (Opcional)</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Ej. -0.180653"
-              value={latitud}
-              onChangeText={setLatitud}
-              keyboardType="numeric"
-            />
-
-            <Text style={styles.inputLabel}>Longitud (Opcional)</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Ej. -78.467838"
-              value={longitud}
-              onChangeText={setLongitud}
-              keyboardType="numeric"
             />
 
             <Text style={styles.inputLabel}>Estado del Cliente</Text>
@@ -188,13 +205,13 @@ export const ClientesList: React.FC<any> = ({ navigation }) => {
               <Picker
                 selectedValue={estadoCliente}
                 onValueChange={(itemValue) => setEstadoCliente(itemValue)}
-                style={{ height: 50, width: '100%', color: '#333' }}
-                dropdownIconColor="#333"
+                style={{ height: 50, width: '100%', color: '#000000ff' }}
+                dropdownIconColor="#000000ff"
                 mode="dropdown"
               >
-                <Picker.Item label="Activo" value="activo" color="#000" />
-                <Picker.Item label="Inactivo" value="inactivo" color="#000" />
-                <Picker.Item label="Prospecto" value="prospecto" color="#000" />
+                <Picker.Item label="Activo" value="activo" color="#ffffffff" />
+                <Picker.Item label="Inactivo" value="inactivo" color="#ffffffff" />
+                <Picker.Item label="Prospecto" value="prospecto" color="#ffffffff" />
               </Picker>
             </View>
             

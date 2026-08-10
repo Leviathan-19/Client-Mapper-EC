@@ -18,7 +18,10 @@ const clientes = new Table({
   longitud: column.real,
   estado_cliente: column.text,
   created_at: column.text,
-  deleted_at: column.text
+  deleted_at: column.text,
+  cedula: column.text,
+  correo: column.text,
+  telefono: column.text
 });
 
 const rutas = new Table({
