@@ -8,6 +8,7 @@ import { MainMenu } from '../views/Main_menu';
 import { ClientesList } from '../views/Main_menu/Customers';
 import { ActivityIndicator, View } from 'react-native';
 import { ProfileNavbar } from '../views/Main_menu/ProfileNavbar';
+import { SqlRunner } from '../views/Main_menu/SqlRunner';
 
 const Stack = createNativeStackNavigator();
 
@@ -24,35 +25,38 @@ export const AppNavigator = () => {
 
   return (
     <View style={{ flex: 1 }}>
-      {appState === 'main_menu' && <ProfileNavbar />}
       <NavigationContainer>
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {appState === 'main_menu' ? (
-          // Stack Principal
-          <>
-            <Stack.Screen name="MainMenu" component={MainMenu} />
-            <Stack.Screen name="Clientes" component={ClientesList} />
-          </>
-        ) : appState === 'active' ? (
-          // Stack Sincronización Inicial
-          <Stack.Screen name="CheckSync">
-            {(props) => <CheckSync {...props} deviceId={deviceId} setAppState={setAppState} />}
-          </Stack.Screen>
-        ) : (
-          // Stack Validación
-          <Stack.Screen name="Validation">
-            {(props) => (
-              <ValidationWhitelist 
-                {...props}
-                appState={appState} 
-                deviceId={deviceId} 
-                setAppState={setAppState} 
-                checkDeviceStatus={checkDeviceStatus} 
-              />
-            )}
-          </Stack.Screen>
-        )}
-      </Stack.Navigator>
+        <View style={{ flex: 1 }}>
+          {appState === 'main_menu' && <ProfileNavbar />}
+          <Stack.Navigator screenOptions={{ headerShown: false }}>
+          {appState === 'main_menu' ? (
+            // Stack Principal
+            <>
+              <Stack.Screen name="MainMenu" component={MainMenu} />
+              <Stack.Screen name="Clientes" component={ClientesList} />
+              <Stack.Screen name="SqlRunner" component={SqlRunner} />
+            </>
+          ) : appState === 'active' ? (
+            // Stack Sincronización Inicial
+            <Stack.Screen name="CheckSync">
+              {(props) => <CheckSync {...props} deviceId={deviceId} setAppState={setAppState} />}
+            </Stack.Screen>
+          ) : (
+            // Stack Validación
+            <Stack.Screen name="Validation">
+              {(props) => (
+                <ValidationWhitelist 
+                  {...props}
+                  appState={appState} 
+                  deviceId={deviceId} 
+                  setAppState={setAppState} 
+                  checkDeviceStatus={checkDeviceStatus} 
+                />
+              )}
+            </Stack.Screen>
+          )}
+        </Stack.Navigator>
+        </View>
       </NavigationContainer>
     </View>
   );

@@ -3,6 +3,7 @@ import { Platform, Alert } from 'react-native';
 import * as Application from 'expo-application';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../supabaseClient';
+import { powerSync, startSync } from '../powerSync';
 
 export type AppState = 'loading' | 'unregistered' | 'pending' | 'active' | 'main_menu' | 'revoked' | 'error';
 
@@ -55,6 +56,12 @@ export const useAppInit = () => {
           }
 
           if (isSetupComplete === 'true' && savedEmpresaId && savedUsuarioId) {
+            try {
+              await powerSync.init();
+              await startSync();
+            } catch (syncErr: any) {
+              console.error('Error al inicializar PowerSync en arranque directo:', syncErr);
+            }
             setAppState('main_menu');
           } else {
             setAppState('active');
