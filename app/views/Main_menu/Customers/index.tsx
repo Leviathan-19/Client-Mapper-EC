@@ -57,9 +57,9 @@ export const ClientesList: React.FC<any> = ({ navigation }) => {
       const parsedLon = longitud.trim() ? parseFloat(longitud) : undefined;
 
       if (editingId) {
-        await updateCliente(editingId, nombre, direccion, parsedLat, parsedLon, estadoCliente);
+        await updateCliente(editingId, nombre, direccion, parsedLat, parsedLon, estadoCliente, cedula, correo, telefono);
       } else {
-        await createCliente(nombre, direccion, parsedLat, parsedLon, estadoCliente);
+        await createCliente(nombre, direccion, parsedLat, parsedLon, estadoCliente, cedula, correo, telefono);
       }
       setModalVisible(false);
     } catch (e: any) {
@@ -119,6 +119,9 @@ export const ClientesList: React.FC<any> = ({ navigation }) => {
           <Text style={styles.backText}>🔙</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Mis Clientes</Text>
+      <TouchableOpacity style={styles.fab} onPress={openCreateModal}>
+        <Text style={styles.fabText}>+</Text>
+      </TouchableOpacity>
       </View>
 
       <TextInput
@@ -144,11 +147,6 @@ export const ClientesList: React.FC<any> = ({ navigation }) => {
         contentContainerStyle={styles.list}
         ListEmptyComponent={<Text style={{ textAlign: 'center', marginTop: 20, color: '#666' }}>No tienes clientes registrados aún.</Text>}
       />
-
-      <TouchableOpacity style={styles.fab} onPress={openCreateModal}>
-        <Text style={styles.fabText}>+</Text>
-      </TouchableOpacity>
-
       {/* Modal Crear/Editar */}
       <Modal visible={modalVisible} transparent animationType="fade">
         <View style={styles.modalOverlay}>

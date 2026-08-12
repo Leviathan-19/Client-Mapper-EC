@@ -33,16 +33,17 @@ export const SqlRunner: React.FC<any> = ({ navigation }) => {
   });
 
   // Query Queue Stats
-  const [queueStats, setQueueStats] = useState<{ count: number; size?: number } | null>(null);
+  const [queueStats, setQueueStats] = useState<{ count: number; size?: number | null } | null>(null);
 
   const checkStatusAndQueue = async () => {
     try {
+      const status: any = powerSync.currentStatus || {};
       setPsStatus({
         connected: powerSync.connected,
         connecting: powerSync.connecting,
-        downloading: powerSync.currentStatus?.downloading || false,
-        uploading: powerSync.currentStatus?.uploading || false,
-        statusText: powerSync.currentStatus?.statusText || '',
+        downloading: status.downloading || status.dataFlowStatus?.downloading || false,
+        uploading: status.uploading || status.dataFlowStatus?.uploading || false,
+        statusText: status.statusText || status.error?.message || '',
       });
 
       const stats = await powerSync.getUploadQueueStats();
@@ -128,7 +129,7 @@ export const SqlRunner: React.FC<any> = ({ navigation }) => {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Text style={styles.backText}>←</Text>
+          <Text style={styles.backText}>🔙</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Consola de Diagnóstico SQL</Text>
       </View>
