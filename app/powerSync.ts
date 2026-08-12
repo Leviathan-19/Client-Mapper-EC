@@ -62,6 +62,7 @@ export const connector = {
       await transaction.complete();
     } catch (ex: any) {
       console.error(`Error de sincronización en la tabla ${lastOp?.table}:`, ex.message);
+      throw ex;
     }
   },
 };

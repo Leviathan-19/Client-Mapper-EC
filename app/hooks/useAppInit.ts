@@ -28,50 +28,56 @@ export const useAppInit = () => {
 
       setDeviceId(id);
 
-      // Revisar si ya completó el Check Sync inicial y tiene sesión guardada
-      const isSetupComplete = await AsyncStorage.getItem('@isInitialSyncComplete');
-      const savedEmpresaId = await AsyncStorage.getItem('@empresaId');
-      const savedUsuarioId = await AsyncStorage.getItem('@usuarioId');
+      // 1. Asegurar que tenemos una sesión de Supabase
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) throw sessionError;
+      
+      let session = sessionData.session;
+      if (!session) {
+        console.log('No hay sesión persistida, creando sesión anónima...');
+        const { data: authData, error: authError } = await supabase.auth.signInAnonymously();
+        if (authError) throw authError;
+        session = authData.session;
+      }
 
-      // Consultar whitelist
-      const { data, error } = await supabase
-        .from('whitelist')
-        .select('estado')
-        .eq('device_id', id)
-        .maybeSingle();
+      // 2. Ejecutar la validación y vinculación vía RPC seguro
+      // Este RPC bypassea RLS de forma segura, revisa la whitelist y vincula el JWT
+      const { data, error } = await supabase.rpc('vincular_usuario_auth', { p_device_id: id });
 
-      if (error) throw error;
-
-      if (!data) {
-        setAppState('unregistered');
-      } else {
-        const dbEstado = data.estado;
-
-        if (dbEstado === 'activo') {
-          // Autenticar anónimamente para obtener un JWT válido para PowerSync
-          const { error: authError } = await supabase.auth.signInAnonymously();
-          if (authError) {
-            console.error('Error en autenticación anónima:', authError);
-            // Podemos continuar de todos modos, pero PowerSync fallará en la nube
-          }
-
-          if (isSetupComplete === 'true' && savedEmpresaId && savedUsuarioId) {
-            try {
-              await powerSync.init();
-              await startSync();
-            } catch (syncErr: any) {
-              console.error('Error al inicializar PowerSync en arranque directo:', syncErr);
-            }
-            setAppState('main_menu');
-          } else {
-            setAppState('active');
-          }
-        } else if (dbEstado === 'pendiente') {
+      if (error) {
+        const msg = error.message || '';
+        if (msg.includes('Dispositivo no registrado')) {
+          setAppState('unregistered');
+        } else if (msg.includes('estado: pendiente')) {
           setAppState('pending');
-        } else if (dbEstado === 'revocado') {
+        } else if (msg.includes('estado: revocado')) {
           setAppState('revoked');
         } else {
-           setAppState('error');
+          // Otro tipo de error (ej: Usuario no activo)
+          throw error;
+        }
+      } else {
+        // Dispositivo está activo y el usuario se vinculó exitosamente
+        const usuarioInfo = data[0]; // La función retorna una tabla, tomamos la primera fila
+        
+        if (usuarioInfo) {
+          // Persistir la info del usuario para uso de la interfaz (PowerSync usará el JWT)
+          await AsyncStorage.setItem('@empresaId', usuarioInfo.empresa_id);
+          await AsyncStorage.setItem('@usuarioId', usuarioInfo.usuario_id);
+        }
+
+        const isSetupComplete = await AsyncStorage.getItem('@isInitialSyncComplete');
+
+        if (isSetupComplete === 'true') {
+          try {
+            await powerSync.init();
+            await startSync();
+          } catch (syncErr: any) {
+            console.error('Error al inicializar PowerSync en arranque directo:', syncErr);
+          }
+          setAppState('main_menu');
+        } else {
+          setAppState('active');
         }
       }
     } catch (err: any) {
