@@ -3,21 +3,21 @@ import { StyleSheet, Platform } from 'react-native';
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f4f6f9',
+    backgroundColor: '#ff8800ff',
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 15,
-    paddingTop: Platform.OS === 'ios' ? 60 : 40,
-    paddingBottom: 15,
-    backgroundColor: '#fff',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
+  flexDirection: 'row',
+  alignItems: 'center',
+  paddingHorizontal: 15,
+  paddingTop: 12,
+  paddingBottom: 12,
+  backgroundColor: '#fff',
+  elevation: 3,
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.1,
+  shadowRadius: 4,
+},
   backButton: {
     padding: 10,
     marginRight: 10,
@@ -105,13 +105,13 @@ export const styles = StyleSheet.create({
   // Modal styles
 // Search bar and filter picker styles
 searchBar: {
-  backgroundColor: '#fff',
+  backgroundColor: '#ff8800ff',
   padding: 8,
   borderRadius: 5,
   marginBottom: 8,
 },
 filterPicker: {
-  backgroundColor: '#fff',
+  backgroundColor: '#ff0000ff',
   borderRadius: 5,
   marginBottom: 8,
 },

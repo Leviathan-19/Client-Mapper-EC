@@ -116,7 +116,7 @@ export const ClientesList: React.FC<any> = ({ navigation }) => {
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Text style={styles.backText}>←</Text>
+          <Text style={styles.backText}>🔙</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Mis Clientes</Text>
       </View>
