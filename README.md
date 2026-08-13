@@ -44,13 +44,20 @@ El núcleo del sistema es su arquitectura **100% Offline-First y Serverless**, l
 - Consultas ultra-rápidas y reactivas usando `usePowerSyncWatchedQuery`.
 - Auto-generación de IDs universales (`UUID v4`) del lado del cliente al crear registros sin internet.
 - Lógica de "Tombstone" (Soft Delete en SQLite) delegada a PowerSync para eliminar registros de la nube al recuperar conectividad.
+- **Formulario Completo**: Modificado para almacenar campos de contacto del cliente (`cedula`, `correo`, `telefono`) localmente y sincronizarlos correctamente.
 
-### 🟢 Fase 6: Autenticación, Sincronización Real y UI Global (Completado)
+### 🟢 Fase 6: Autenticación Segura, RLS y Multi-tenant (Completado)
 
-- **PowerSync Cloud**: Configuración de instancia de PowerSync con publicación de PostgreSQL y vinculación nativa (`.env`).
-- **Autenticación Anónima**: Integración de `supabase.auth.signInAnonymously()` para emisión de JWT legales sin requerir cuentas de correo, permitiendo a PowerSync autenticarse mediante Supabase Auth.
-- **Subida a la Nube (Upload Data)**: Implementación de la cola de transacciones locales `getNextCrudTransaction()` para mapear operaciones de SQLite a mutaciones `REST` de Supabase de manera automática e invisible.
-- **UI Estática y Nativa**: Creación de un `ProfileNavbar` que persiste globalmente en la navegación extrayendo datos dinámicos, y sustitución de inputs estáticos por controles nativos (`@react-native-picker/picker`).
+- **Vínculo Seguro de Autenticación**: Lógica basada en Supabase Anonymous Auth (`signInAnonymously`) vinculada al usuario de la base de datos local usando la función segura RPC `vincular_usuario_auth(p_device_id)` que registra el `auth.uid()` en la tabla `usuarios.auth_user_id`.
+- **Seguridad RLS (Supabase)**: Habilitación de políticas a nivel de fila (*Row Level Security*) para restringir que los usuarios solo puedan leer o modificar la información de clientes que pertenezcan a su misma `empresa_id`.
+- **Reglas de Sincronización Avanzadas**: Archivo `sync-rules.yaml` parametrizado dinámicamente mediante `request.user_id()` para generar cubos de datos aislados a nivel corporativo (`company_data` y `user_whitelist`), evitando fugas de datos y permitiendo que todos los usuarios de la misma empresa visualicen la información compartida (clientes, productos, etc.).
+- **Espejeo de Esquemas**: Actualización de `powerSyncSchema.ts` (añadiendo la columna `auth_user_id`) para evitar inconsistencias de sincronización nativa (Schema Mismatch).
+- **Publicación de Datos (Logical Replication)**: Integración de tablas críticas en la publicación de PostgreSQL `powersync` para la correcta recepción de mutaciones del lado del servidor.
+
+### 🟢 Fase 7: Consola de Diagnóstico SQL y Testing (Completado)
+
+- **Consola SQL Integrada**: Accesible desde el ícono de engranaje (configuración) en el `ProfileNavbar`. Permite ejecutar sentencias SELECT personalizadas, consultar tablas del motor SQLite (`sqlite_master`), visualizar colas de subida locales de PowerSync (`ps_crud`) y verificar en tiempo real el estado y estadísticas de red del conector.
+- **Herramientas de Auditoría**: Implementación de scripts Node.js para inspeccionar la integridad del esquema en Supabase (`check-schema.js`) y auditar el mapeo relacional de datos (`check-data.js`).
 
 ---
 
@@ -58,36 +65,43 @@ El núcleo del sistema es su arquitectura **100% Offline-First y Serverless**, l
 
 - [`Arquitectura_ERP_Visitas.md`](./Arquitectura_ERP_Visitas.md): Flujo de trabajo, geolocalización, diagramas y fases de desarrollo del proyecto.
 - `/docs`: Documentación y configuración.
-  - [`supabase.txt`](./docs/supabase.txt): Scripts DDL completos (tablas, llaves primarias/foráneas, y políticas RLS para lectura y escritura).
-  - [`dictionary.txt`](./docs/dictionary.txt): Diccionario de datos exhaustivo de las tablas y campos del ERP.
-  - [`commands.txt`](./docs/commands.txt): Comandos comunes para desarrollo y pruebas.
 - `/scripts`: Scripts utilitarios de prueba y mantenimiento.
-  - [`test-supabase.js`](./scripts/test-supabase.js): Prueba de conexión básica.
-  - [`test-supabase-join.js`](./scripts/test-supabase-join.js): Prueba de joins relacionales para validación offline-first.
+  - [`check-schema.js`](./scripts/check-schema.js): Compara las columnas de base de datos en Supabase con los esquemas móviles.
+  - [`check-data.js`](./scripts/check-data.js): Diagnostica el mapeo de `auth_user_id` y relaciones multi-tenant entre usuarios y empresas.
 - `/app`: Código fuente del cliente móvil Expo / React Native.
-  - `/assets`: Archivos estáticos como el logotipo de la aplicación (`logo_clientmapper_purple.png`).
   - `/context`: `SessionContext.tsx` para proveer los datos de la sesión offline a todas las vistas.
   - `/hooks`: Lógica de inicialización (`useAppInit.ts`).
-  - `/navigation`: Configuración del stack nativo (`AppNavigator.tsx`).
   - `/views`: Componentes segmentados por dominios (diseño, vista, lógica):
-    - `Validation_whitelist`: UI de bloqueo y solicitud de acceso.
     - `Check_sync`: Tablero de estado inicial y descarga de SQLite.
-    - `Main_menu`: Menú central del ERP y monitoreo de red.
-    - `Clientes`: CRUD robusto offline para gestión de la cartera.
-  - `App.tsx`: Punto de entrada que envuelve los Providers.
+    - `Main_menu`: Menú central del ERP y monitor de red.
+      - `/Customers`: CRUD offline para la cartera de clientes.
+      - `/SqlRunner`: Consola de administración local de bases de datos.
   - `powerSyncSchema.ts`: Definición del esquema local de tablas SQLite para sincronización offline.
-  - `powerSync.ts`: Inicialización de `PowerSyncDatabase` con el adaptador de alto rendimiento `op-sqlite` y el conector JWT de Supabase.
+  - `powerSync.ts`: Conector de sincronización que interactúa con la nube a través de tokens JWT firmados.
 
 ---
 
-## 🔍 Guía de Pruebas Manuales (Fase 3)
+## 🛠️ Configuración de Seguridad y PowerSync Cloud
 
-Puedes probar los diferentes comportamientos del checklist en tu emulador modificando la base de datos de Supabase:
+Para que la sincronización en tiempo real y offline-first funcione correctamente entre Supabase, PowerSync Cloud y la aplicación móvil, asegúrate de tener configurado lo siguiente:
 
-1.  **Sin Internet**: Apaga la conexión Wi-Fi de tu emulador. La app bloqueará el inicio mostrando 🔴 en **Conectividad de Red**.
-2.  **Sin Usuario**: En la tabla `whitelist` de Supabase, pon `usuario_id = NULL` para el dispositivo correspondiente. Al reintentar, se bloqueará con 🔴 en **Asignación de Usuario**.
-3.  **Sin Empresa**: En la tabla `usuarios`, pon `empresa_id = NULL` para el usuario asignado. El checklist se detendrá en 🔴 para **Empresa Autorizada**.
-4.  **Sincronización Exitosa**: Asegúrate de tener internet, y de que la relación de dispositivo-usuario-empresa sea completamente válida. Todos los indicadores se pondrán en verde (🟢) e iniciará la descarga en segundo plano.
+1. **Publicación en Supabase**:
+   Ejecuta el siguiente comando SQL en Supabase para habilitar la réplica lógica sobre las tablas críticas:
+   ```sql
+   ALTER PUBLICATION powersync ADD TABLE 
+     public.clientes, 
+     public.usuarios, 
+     public.empresas, 
+     public.rutas, 
+     public.visitas, 
+     public.productos, 
+     public.visita_productos, 
+     public.whitelist;
+   ```
+2. **Client Auth en PowerSync Cloud**:
+   En el panel de control de tu instancia en PowerSync, ve a **Client Auth** e introduce los certificados del emisor de JWT (Supabase):
+   * **JWKS URL**: `https://<tu-id-proyecto>.supabase.co/auth/v1/certs`
+   * **Accepted JWT Audience**: `authenticated`
 
 ---
 
