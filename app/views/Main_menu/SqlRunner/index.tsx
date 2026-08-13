@@ -38,6 +38,11 @@ export const SqlRunner: React.FC<any> = ({ navigation }) => {
   const checkStatusAndQueue = async () => {
     try {
       const status: any = powerSync.currentStatus || {};
+      // console.log('POWERSYNC CONNECTION STATUS:', {
+      //   connected: powerSync.connected,
+      //   connecting: powerSync.connecting,
+      //   status: status
+      // });
       setPsStatus({
         connected: powerSync.connected,
         connecting: powerSync.connecting,

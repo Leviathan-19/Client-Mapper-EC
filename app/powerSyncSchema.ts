@@ -79,7 +79,8 @@ const usuarios = new Table({
   nombre: column.text,
   rol: column.text,
   estado: column.text,
-  created_at: column.text
+  created_at: column.text,
+  auth_user_id: column.text
 });
 
 export const AppSchemaDefinition = new Schema({
