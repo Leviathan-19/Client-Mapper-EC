@@ -44,13 +44,33 @@ export const RoutesList: React.FC<any> = ({ navigation }) => {
     if (!isoString) return 'N/A';
     try {
       const date = new Date(isoString);
-      return date.toLocaleDateString('es-EC', {
+      if (isNaN(date.getTime())) return isoString;
+
+      // Si la cadena tiene longitud 10 y no contiene 'T', es solo fecha (YYYY-MM-DD)
+      if (isoString.length === 10 && !isoString.includes('T')) {
+        const [year, month, day] = isoString.split('-').map(Number);
+        const localDate = new Date(year, month - 1, day);
+        return localDate.toLocaleDateString('es-EC', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+        });
+      }
+
+      // Si es un timestamp completo con hora, mostrar fecha y hora local (hh:mm)
+      const datePart = date.toLocaleDateString('es-EC', {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
       });
+      const timePart = date.toLocaleTimeString('es-EC', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      });
+      return `${datePart} ${timePart}`;
     } catch {
-      return isoString.split('T')[0];
+      return isoString;
     }
   };
 
@@ -69,7 +89,7 @@ export const RoutesList: React.FC<any> = ({ navigation }) => {
         </TouchableOpacity>
       </View>
       
-      <Text style={styles.cardText}>Fecha: {formatDate(item.fecha || item.created_at)}</Text>
+      <Text style={styles.cardText}>Fecha: {formatDate(item.created_at || item.fecha)}</Text>
       <Text style={styles.cardText}>Creador: {item.creador_nombre || 'N/A'}</Text>
       
       <View style={styles.cardFooter}>

@@ -106,9 +106,8 @@ export const useRoutes = () => {
     );
   };
 
-  const createVisit = async (rutaId: string, establecimientoId: string, fechaProgramada?: string) => {
+  const createVisit = async (rutaId: string, establecimientoId: string, fechaProgramada?: string | null) => {
     const id = uuidv4();
-    const dateProg = fechaProgramada || new Date().toISOString();
     await powerSync.execute(
       `INSERT INTO visitas (id, ruta_id, establecimiento_id, fecha_programada, estado_visita, created_at) 
        VALUES (?, ?, ?, ?, ?, ?)`,
@@ -116,7 +115,7 @@ export const useRoutes = () => {
         id,
         rutaId,
         establecimientoId,
-        dateProg,
+        fechaProgramada || null,
         'programada',
         new Date().toISOString()
       ]
@@ -127,6 +126,21 @@ export const useRoutes = () => {
     await powerSync.execute(
       `DELETE FROM visitas WHERE id = ?`,
       [id]
+    );
+  };
+
+  const updateVisitStatus = async (id: string, status: string) => {
+    const isCompleted = status === 'completada';
+    await powerSync.execute(
+      `UPDATE visitas SET estado_visita = ?, fecha_realizada = ? WHERE id = ?`,
+      [status, isCompleted ? new Date().toISOString() : null, id]
+    );
+  };
+
+  const updateVisitDate = async (id: string, fechaProgramada: string | null) => {
+    await powerSync.execute(
+      `UPDATE visitas SET fecha_programada = ? WHERE id = ?`,
+      [fechaProgramada, id]
     );
   };
 
@@ -166,6 +180,8 @@ export const useRoutes = () => {
     updateRouteName,
     createVisit,
     deleteVisit,
+    updateVisitStatus,
+    updateVisitDate,
     createEstablishment
   };
 };
