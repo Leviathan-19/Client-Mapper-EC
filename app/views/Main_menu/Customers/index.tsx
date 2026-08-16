@@ -15,8 +15,6 @@ export const ClientesList: React.FC<any> = ({ navigation }) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [nombre, setNombre] = useState('');
   const [direccion, setDireccion] = useState('');
-  const [latitud, setLatitud] = useState('');
-  const [longitud, setLongitud] = useState('');
   const [estadoCliente, setEstadoCliente] = useState('activo');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('todos');
@@ -27,8 +25,6 @@ export const ClientesList: React.FC<any> = ({ navigation }) => {
     setEditingId(null);
     setNombre('');
     setDireccion('');
-    setLatitud('');
-    setLongitud('');
     setEstadoCliente('activo');
     setModalVisible(true);
   };
@@ -37,8 +33,6 @@ export const ClientesList: React.FC<any> = ({ navigation }) => {
     setEditingId(cliente.id);
     setNombre(cliente.nombre);
     setDireccion(cliente.direccion || '');
-    setLatitud(cliente.latitud ? cliente.latitud.toString() : '');
-    setLongitud(cliente.longitud ? cliente.longitud.toString() : '');
     setCedula(cliente.cedula || '');
     setCorreo(cliente.correo || '');
     setTelefono(cliente.telefono || '');
@@ -53,13 +47,10 @@ export const ClientesList: React.FC<any> = ({ navigation }) => {
     }
     
     try {
-      const parsedLat = latitud.trim() ? parseFloat(latitud) : undefined;
-      const parsedLon = longitud.trim() ? parseFloat(longitud) : undefined;
-
       if (editingId) {
-        await updateCliente(editingId, nombre, direccion, parsedLat, parsedLon, estadoCliente, cedula, correo, telefono);
+        await updateCliente(editingId, nombre, direccion, estadoCliente, cedula, correo, telefono);
       } else {
-        await createCliente(nombre, direccion, parsedLat, parsedLon, estadoCliente, cedula, correo, telefono);
+        await createCliente(nombre, direccion, estadoCliente, cedula, correo, telefono);
       }
       setModalVisible(false);
     } catch (e: any) {
