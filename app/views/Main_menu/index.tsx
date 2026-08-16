@@ -25,7 +25,7 @@ export const MainMenu: React.FC<any> = ({ navigation }) => {
             <Text style={styles.cardSubtitle}>Gestionar cartera</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.card}>
+          <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('Routes')}>
             <Text style={{ fontSize: 32 }}>🗺️</Text>
             <Text style={styles.cardTitle}>Rutas</Text>
             <Text style={styles.cardSubtitle}>Ver planificaciones</Text>
