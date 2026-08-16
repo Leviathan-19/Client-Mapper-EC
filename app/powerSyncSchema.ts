@@ -14,14 +14,23 @@ const clientes = new Table({
   asignado_a: column.text,
   nombre: column.text,
   direccion: column.text,
-  latitud: column.real,
-  longitud: column.real,
   estado_cliente: column.text,
   created_at: column.text,
   deleted_at: column.text,
   cedula: column.text,
   correo: column.text,
   telefono: column.text
+});
+
+const establecimientos = new Table({
+  empresa_id: column.text,
+  cliente_id: column.text,
+  nombre_comercial: column.text,
+  direccion: column.text,
+  latitud: column.real,
+  longitud: column.real,
+  created_at: column.text,
+  deleted_at: column.text
 });
 
 const rutas = new Table({
@@ -35,12 +44,12 @@ const rutas = new Table({
 
 const visitas = new Table({
   ruta_id: column.text,
-  cliente_id: column.text,
+  establecimiento_id: column.text,
   fecha_programada: column.text,
   fecha_realizada: column.text,
   estado_visita: column.text,
-  latitud: column.real,
-  longitud: column.real,
+  latitud_registro: column.real,
+  longitud_registro: column.real,
   created_at: column.text,
   deleted_at: column.text
 });
@@ -86,6 +95,7 @@ const usuarios = new Table({
 export const AppSchemaDefinition = new Schema({
   empresas,
   clientes,
+  establecimientos,
   rutas,
   visitas,
   productos,

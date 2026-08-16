@@ -1,9 +1,6 @@
-Arquitectura_ERP_Visitas.md
-supabase.txt
-commands.txt
-dictionary.txt
+docs/*
 scripts/*
 debug-archive/*
-test-apk.txt
+markdowns/*
 debug-archive
-Plan-de-Implementación-Reestructuración-de-Autenticación,Whitelist,RLSyPowerSync.md
+
