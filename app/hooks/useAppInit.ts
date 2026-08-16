@@ -81,7 +81,30 @@ export const useAppInit = () => {
         }
       }
     } catch (err: any) {
-      console.error(err);
+      console.error('Error in checkDeviceStatus:', err);
+
+      try {
+        const isSetupComplete = await AsyncStorage.getItem('@isInitialSyncComplete');
+        const savedEmpresaId = await AsyncStorage.getItem('@empresaId');
+        const savedUsuarioId = await AsyncStorage.getItem('@usuarioId');
+
+        if (isSetupComplete === 'true' && savedEmpresaId && savedUsuarioId) {
+          console.log('Sin conexión a internet. Iniciando aplicación en modo offline...');
+          try {
+            await powerSync.init();
+            startSync().catch((syncErr: any) => {
+              console.log('PowerSync startSync diferido por falta de red:', syncErr.message);
+            });
+            setAppState('main_menu');
+            return;
+          } catch (dbInitErr) {
+            console.error('Error inicializando PowerSync offline:', dbInitErr);
+          }
+        }
+      } catch (storageErr) {
+        console.error('Error leyendo almacenamiento para modo offline:', storageErr);
+      }
+
       setAppState('error');
       Alert.alert('Error', err.message || 'Error al conectar con el servidor');
     }
