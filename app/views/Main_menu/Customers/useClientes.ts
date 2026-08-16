@@ -6,8 +6,6 @@ export interface Cliente {
   id: string;
   nombre: string;
   direccion: string | null;
-  latitud: number | null;
-  longitud: number | null;
   estado_cliente: string;
   cedula: string | null;
   correo: string | null;
@@ -20,7 +18,7 @@ export const useClientes = () => {
 
   // Traer clientes activos de esta empresa
   const clientes = usePowerSyncWatchedQuery<Cliente>(
-    `SELECT id, nombre, direccion, latitud, longitud, estado_cliente, cedula, correo, telefono 
+    `SELECT id, nombre, direccion, estado_cliente, cedula, correo, telefono 
      FROM clientes 
      WHERE empresa_id = ? AND deleted_at IS NULL`,
     [empresaId]
@@ -29,8 +27,6 @@ export const useClientes = () => {
   const createCliente = async (
     nombre: string,
     direccion: string,
-    latitud?: number,
-    longitud?: number,
     estado_cliente: string = 'activo',
     cedula?: string,
     correo?: string,
@@ -40,16 +36,14 @@ export const useClientes = () => {
     
     const id = uuidv4();
     await powerSync.execute(
-      `INSERT INTO clientes (id, empresa_id, asignado_a, nombre, direccion, latitud, longitud, estado_cliente, cedula, correo, telefono) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO clientes (id, empresa_id, asignado_a, nombre, direccion, estado_cliente, cedula, correo, telefono) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         id,
         empresaId,
         usuarioId,
         nombre,
         direccion,
-        latitud || null,
-        longitud || null,
         estado_cliente,
         cedula || null,
         correo || null,
@@ -62,20 +56,16 @@ export const useClientes = () => {
     id: string,
     nombre: string,
     direccion: string,
-    latitud?: number,
-    longitud?: number,
     estado_cliente: string = 'activo',
     cedula?: string,
     correo?: string,
     telefono?: string
   ) => {
     await powerSync.execute(
-      `UPDATE clientes SET nombre = ?, direccion = ?, latitud = ?, longitud = ?, estado_cliente = ?, cedula = ?, correo = ?, telefono = ? WHERE id = ?`,
+      `UPDATE clientes SET nombre = ?, direccion = ?, estado_cliente = ?, cedula = ?, correo = ?, telefono = ? WHERE id = ?`,
       [
         nombre,
         direccion,
-        latitud || null,
-        longitud || null,
         estado_cliente,
         cedula || null,
         correo || null,
