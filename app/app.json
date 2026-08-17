@@ -35,7 +35,13 @@
     "owner": "leviathan19",
     "plugins": [
       "@react-native-community/datetimepicker",
-      "@maplibre/maplibre-react-native"
+      "@maplibre/maplibre-react-native",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location."
+        }
+      ]
     ]
   }
 }
