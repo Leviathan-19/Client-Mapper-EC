@@ -8,6 +8,8 @@ import { MainMenu } from '../views/Main_menu';
 import { ClientesList } from '../views/Main_menu/Customers';
 import { RoutesList } from '../views/Main_menu/Routes';
 import { RouteDetail } from '../views/Main_menu/Routes/Detail';
+import { ProductsList } from '../views/Main_menu/Products';
+import { VisitsList } from '../views/Main_menu/Visits';
 import { ActivityIndicator, View } from 'react-native';
 import { ProfileNavbar } from '../views/Main_menu/ProfileNavbar';
 import { SqlRunner } from '../views/Main_menu/SqlRunner';
@@ -38,6 +40,8 @@ export const AppNavigator = () => {
               <Stack.Screen name="Clientes" component={ClientesList} />
               <Stack.Screen name="Routes" component={RoutesList} />
               <Stack.Screen name="RouteDetail" component={RouteDetail} />
+              <Stack.Screen name="Productos" component={ProductsList} />
+              <Stack.Screen name="Visitas" component={VisitsList} />
               <Stack.Screen name="SqlRunner" component={SqlRunner} />
             </>
           ) : appState === 'active' ? (
