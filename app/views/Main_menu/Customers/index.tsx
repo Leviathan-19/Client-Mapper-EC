@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, TouchableOpacity, FlatList, Modal, TextInput, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, Modal, TextInput, Alert, ScrollView } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { useClientes, Cliente } from './useClientes';
 import { styles } from './styles';
@@ -25,6 +25,9 @@ export const ClientesList: React.FC<any> = ({ navigation }) => {
     setEditingId(null);
     setNombre('');
     setDireccion('');
+    setCedula('');
+    setCorreo('');
+    setTelefono('');
     setEstadoCliente('activo');
     setModalVisible(true);
   };
@@ -141,33 +144,35 @@ export const ClientesList: React.FC<any> = ({ navigation }) => {
       {/* Modal Crear/Editar */}
       <Modal visible={modalVisible} transparent animationType="fade">
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>{editingId ? 'Editar Cliente' : 'Nuevo Cliente'}</Text>
+          <ScrollView contentContainerStyle={{flexGrow: 1, justifyContent: 'center'}} style={{width: '100%'}}>
+            <View style={{alignItems: 'center', marginVertical: 20}}>
+              <View style={styles.modalContainer}>
+                <Text style={styles.modalTitle}>{editingId ? 'Editar Cliente' : 'Nuevo Cliente'}</Text>
             
             <Text style={styles.inputLabel}>Nombre (Obligatorio)</Text>
             <TextInput
               style={styles.input}
               placeholder="Ej. Juan Pérez"
-              placeholderTextColor="#000000ff"
+              placeholderTextColor="#999"
               value={nombre}
               onChangeText={setNombre}
             />
 
-            <Text style={styles.inputLabel}>Cedula</Text>
+            <Text style={styles.inputLabel}>Cédula</Text>
             <TextInput
               style={styles.input}
               placeholder="Ej. 1718671662"
-              placeholderTextColor="#000000ff"
+              placeholderTextColor="#999"
               value={cedula}
               onChangeText={setCedula}
               keyboardType="numeric"
             />
 
-            <Text style={styles.inputLabel}>telefono</Text>
+            <Text style={styles.inputLabel}>Teléfono</Text>
             <TextInput
               style={styles.input}
               placeholder="Ej. 0987654321"
-              placeholderTextColor="#000000ff"
+              placeholderTextColor="#999"
               value={telefono}
               onChangeText={setTelefono}
               keyboardType="numeric"
@@ -176,7 +181,7 @@ export const ClientesList: React.FC<any> = ({ navigation }) => {
             <TextInput
               style={styles.input}
               placeholder="Ej.correo@gmail.com"
-              placeholderTextColor="#000000ff"
+              placeholderTextColor="#999"
               value={correo}
               onChangeText={setCorreo}
             />
@@ -184,7 +189,7 @@ export const ClientesList: React.FC<any> = ({ navigation }) => {
             <TextInput
               style={styles.input}
               placeholder="Ej. Av. Principal 123"
-              placeholderTextColor="#000000ff"
+              placeholderTextColor="#999"
               value={direccion}
               onChangeText={setDireccion}
             />
@@ -194,13 +199,13 @@ export const ClientesList: React.FC<any> = ({ navigation }) => {
               <Picker
                 selectedValue={estadoCliente}
                 onValueChange={(itemValue) => setEstadoCliente(itemValue)}
-                style={{ height: 50, width: '100%', color: '#000000ff' }}
-                dropdownIconColor="#000000ff"
+                style={{ height: 50, width: '100%', color: '#333' }}
+                dropdownIconColor="#333"
                 mode="dropdown"
               >
-                <Picker.Item label="Activo" value="activo" color="#ffffffff" />
-                <Picker.Item label="Inactivo" value="inactivo" color="#ffffffff" />
-                <Picker.Item label="Prospecto" value="prospecto" color="#ffffffff" />
+                <Picker.Item label="Activo" value="activo" />
+                <Picker.Item label="Inactivo" value="inactivo" />
+                <Picker.Item label="Prospecto" value="prospecto" />
               </Picker>
             </View>
             
@@ -213,6 +218,8 @@ export const ClientesList: React.FC<any> = ({ navigation }) => {
               </TouchableOpacity>
             </View>
           </View>
+          </View>
+          </ScrollView>
         </View>
       </Modal>
     </View>
