@@ -29,6 +29,7 @@ const establecimientos = new Table({
   direccion: column.text,
   latitud: column.real,
   longitud: column.real,
+  estado_comercial: column.text,
   created_at: column.text,
   deleted_at: column.text
 });
