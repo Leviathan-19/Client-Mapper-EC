@@ -9,6 +9,7 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@maplibre/maplibre-react-native": "^11.3.6",
     "@powersync/op-sqlite": "^0.9.16",
     "@powersync/react-native": "^1.35.10",
     "@react-native-async-storage/async-storage": "^3.1.1",
@@ -35,6 +36,7 @@
     "uuid": "^14.0.1"
   },
   "devDependencies": {
+    "@types/geojson": "^7946.0.16",
     "@types/react": "~19.1.0",
     "@types/uuid": "^10.0.0",
     "typescript": "~5.9.2"
