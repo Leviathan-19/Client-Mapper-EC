@@ -1,6 +1,7 @@
 import { usePowerSyncWatchedQuery, usePowerSync } from '@powersync/react-native';
 import { v4 as uuidv4 } from 'uuid';
 import { useSession } from '../../../context/SessionContext';
+import { CustomerEstablishment } from "./EstablishmentsList";
 
 export interface Cliente {
   id: string;
@@ -23,7 +24,7 @@ export const useClientes = () => {
      WHERE empresa_id = ? AND deleted_at IS NULL`,
     [empresaId]
   );
-
+  
   const createCliente = async (
     nombre: string,
     direccion: string,
@@ -74,7 +75,22 @@ export const useClientes = () => {
       ]
     );
   };
-
+  const establishments = usePowerSyncWatchedQuery<CustomerEstablishment>(
+  `
+    SELECT
+      id,
+      cliente_id,
+      nombre_comercial,
+      direccion,
+      latitud,
+      longitud
+    FROM establecimientos
+    WHERE cliente_id = ?
+      AND deleted_at IS NULL
+    ORDER BY nombre_comercial ASC
+  `,
+  [selectedClienteId]
+);
   const deleteCliente = async (id: string) => {
     // Al hacer DELETE en SQLite, PowerSync crea un tombstone localmente 
     // y luego emite un comando DELETE al servidor cuando hay internet.
