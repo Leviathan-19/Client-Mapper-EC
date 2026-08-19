@@ -12,7 +12,6 @@ import {
 import { Picker } from "@react-native-picker/picker";
 import { useClientes, Cliente } from "./useClientes";
 import { styles } from "./styles";
-import powerSync from "../../../powerSync";
 
 export const ClientesList: React.FC<any> = ({ navigation }) => {
   const { clientes, createCliente, updateCliente, deleteCliente } =
@@ -130,17 +129,6 @@ export const ClientesList: React.FC<any> = ({ navigation }) => {
       </View>
     </View>
   );
-  const associateEstablecimiento = async (
-    establecimientoId: string,
-    clienteId: string,
-  ) => {
-    await powerSync.execute(
-      `UPDATE establecimientos
-     SET cliente_id = ?
-     WHERE id = ?`,
-      [clienteId, establecimientoId],
-    );
-  };
   const filteredClientes = useMemo(() => {
     return clientes.filter((c) => {
       const matchesSearch =

@@ -1,7 +1,9 @@
-import { usePowerSyncWatchedQuery, usePowerSync } from '@powersync/react-native';
-import { v4 as uuidv4 } from 'uuid';
-import { useSession } from '../../../context/SessionContext';
-import { CustomerEstablishment } from "./EstablishmentsList";
+import {
+  usePowerSyncWatchedQuery,
+  usePowerSync,
+} from "@powersync/react-native";
+import { v4 as uuidv4 } from "uuid";
+import { useSession } from "../../../context/SessionContext";
 
 export interface Cliente {
   id: string;
@@ -17,28 +19,59 @@ export const useClientes = () => {
   const { empresaId, usuarioId } = useSession();
   const powerSync = usePowerSync();
 
-  // Traer clientes activos de esta empresa
+  /**
+   * Clientes pertenecientes a la empresa del usuario actual.
+   */
   const clientes = usePowerSyncWatchedQuery<Cliente>(
-    `SELECT id, nombre, direccion, estado_cliente, cedula, correo, telefono 
-     FROM clientes 
-     WHERE empresa_id = ? AND deleted_at IS NULL`,
-    [empresaId]
+    `
+      SELECT
+        id,
+        nombre,
+        direccion,
+        estado_cliente,
+        cedula,
+        correo,
+        telefono
+      FROM clientes
+      WHERE empresa_id = ?
+        AND deleted_at IS NULL
+      ORDER BY nombre ASC
+    `,
+    [empresaId],
   );
-  
+
+  /**
+   * Crear cliente.
+   */
   const createCliente = async (
     nombre: string,
     direccion: string,
-    estado_cliente: string = 'activo',
+    estado_cliente: string = "activo",
     cedula?: string,
     correo?: string,
-    telefono?: string
+    telefono?: string,
   ) => {
-    if (!empresaId || !usuarioId) throw new Error('No hay sesión activa');
-    
+    if (!empresaId || !usuarioId) {
+      throw new Error("No hay sesión activa");
+    }
+
     const id = uuidv4();
+
     await powerSync.execute(
-      `INSERT INTO clientes (id, empresa_id, asignado_a, nombre, direccion, estado_cliente, cedula, correo, telefono) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `
+        INSERT INTO clientes (
+          id,
+          empresa_id,
+          asignado_a,
+          nombre,
+          direccion,
+          estado_cliente,
+          cedula,
+          correo,
+          telefono
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `,
       [
         id,
         empresaId,
@@ -48,22 +81,35 @@ export const useClientes = () => {
         estado_cliente,
         cedula || null,
         correo || null,
-        telefono || null
-      ]
+        telefono || null,
+      ],
     );
   };
 
+  /**
+   * Actualizar cliente.
+   */
   const updateCliente = async (
     id: string,
     nombre: string,
     direccion: string,
-    estado_cliente: string = 'activo',
+    estado_cliente: string = "activo",
     cedula?: string,
     correo?: string,
-    telefono?: string
+    telefono?: string,
   ) => {
     await powerSync.execute(
-      `UPDATE clientes SET nombre = ?, direccion = ?, estado_cliente = ?, cedula = ?, correo = ?, telefono = ? WHERE id = ?`,
+      `
+        UPDATE clientes
+        SET
+          nombre = ?,
+          direccion = ?,
+          estado_cliente = ?,
+          cedula = ?,
+          correo = ?,
+          telefono = ?
+        WHERE id = ?
+      `,
       [
         nombre,
         direccion,
@@ -71,32 +117,21 @@ export const useClientes = () => {
         cedula || null,
         correo || null,
         telefono || null,
-        id
-      ]
+        id,
+      ],
     );
   };
-  const establishments = usePowerSyncWatchedQuery<CustomerEstablishment>(
-  `
-    SELECT
-      id,
-      cliente_id,
-      nombre_comercial,
-      direccion,
-      latitud,
-      longitud
-    FROM establecimientos
-    WHERE cliente_id = ?
-      AND deleted_at IS NULL
-    ORDER BY nombre_comercial ASC
-  `,
-  [selectedClienteId]
-);
+
+  /**
+   * Eliminar cliente.
+   */
   const deleteCliente = async (id: string) => {
-    // Al hacer DELETE en SQLite, PowerSync crea un tombstone localmente 
-    // y luego emite un comando DELETE al servidor cuando hay internet.
     await powerSync.execute(
-      `DELETE FROM clientes WHERE id = ?`,
-      [id]
+      `
+        DELETE FROM clientes
+        WHERE id = ?
+      `,
+      [id],
     );
   };
 
@@ -104,7 +139,6 @@ export const useClientes = () => {
     clientes,
     createCliente,
     updateCliente,
-    deleteCliente
+    deleteCliente,
   };
 };
-
