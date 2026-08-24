@@ -22,17 +22,21 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.leviathan19.ClientMapperEC"
+      "package": "com.leviathan98.ClientMapperEC",
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "extra": {
       "eas": {
-        "projectId": "a3fbd7a4-7fd9-4461-8336-af52d835d371"
+        "projectId": "262c5b24-359b-49a0-b0b3-9049274327e5"
       }
     },
-    "owner": "leviathan19",
+    "owner": "leviathan98",
     "plugins": [
       "@react-native-community/datetimepicker",
       "@maplibre/maplibre-react-native",
