@@ -46,6 +46,7 @@ const rutas = new Table({
 const visitas = new Table({
   ruta_id: column.text,
   establecimiento_id: column.text,
+  empresa_id: column.text,
   fecha_programada: column.text,
   fecha_realizada: column.text,
   estado_visita: column.text,
@@ -68,6 +69,7 @@ const productos = new Table({
 const visita_productos = new Table({
   visita_id: column.text,
   producto_id: column.text,
+  empresa_id: column.text,
   cantidad: column.integer,
   precio_unitario: column.real,
   created_at: column.text

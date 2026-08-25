@@ -61,7 +61,11 @@ export const connector = {
       
       await transaction.complete();
     } catch (ex: any) {
-      console.error(`Error de sincronización en la tabla ${lastOp?.table}:`, ex.message);
+      if (ex.message && (ex.message.includes('Network') || ex.message.includes('Failed to fetch'))) {
+        console.log(`[PowerSync] Red no disponible, se reintentará la tabla ${lastOp?.table} más tarde.`);
+      } else {
+        console.error(`Error de sincronización en la tabla ${lastOp?.table}:`, ex.message);
+      }
       throw ex;
     }
   },
