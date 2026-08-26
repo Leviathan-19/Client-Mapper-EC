@@ -9,11 +9,18 @@ import {
   Alert,
   ScrollView,
 } from "react-native";
-import { Picker } from "@react-native-picker/picker";
+import { ThemedTextInput } from "../../../components/ThemedTextInput";
+import {
+  ThemedPicker,
+  ThemedPickerItem,
+} from "../../../components/ThemedPicker";
+import { useAppTheme } from "../../../context/ThemeContext";
 import { useClientes, Cliente } from "./useClientes";
-import { styles } from "./styles";
+import { createClientesStyles } from "./styles";
 
 export const ClientesList: React.FC<any> = ({ navigation }) => {
+  const { colors } = useAppTheme();
+  const styles = createClientesStyles(colors);
   const { clientes, createCliente, updateCliente, deleteCliente } =
     useClientes();
 
@@ -156,7 +163,7 @@ export const ClientesList: React.FC<any> = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      <TextInput
+      <ThemedTextInput
         style={styles.searchBar}
         placeholder="Buscar clientes..."
         value={searchQuery}
@@ -164,15 +171,16 @@ export const ClientesList: React.FC<any> = ({ navigation }) => {
       />
 
       <View style={styles.filterPicker}>
-        <Picker
+        <ThemedPicker
           selectedValue={filterStatus}
-          onValueChange={(itemValue) => setFilterStatus(itemValue)}
+          onValueChange={(itemValue) => setFilterStatus(itemValue as string)}
+          mode="dropdown"
         >
-          <Picker.Item label="Todos" value="todos" />
-          <Picker.Item label="Activo" value="activo" />
-          <Picker.Item label="Inactivo" value="inactivo" />
-          <Picker.Item label="Prospecto" value="prospecto" />
-        </Picker>
+          <ThemedPickerItem label="Todos" value="todos" />
+          <ThemedPickerItem label="Activo" value="activo" />
+          <ThemedPickerItem label="Inactivo" value="inactivo" />
+          <ThemedPickerItem label="Prospecto" value="prospecto" />
+        </ThemedPicker>
       </View>
 
       <FlatList
@@ -200,46 +208,41 @@ export const ClientesList: React.FC<any> = ({ navigation }) => {
                 </Text>
 
                 <Text style={styles.inputLabel}>Nombre (Obligatorio)</Text>
-                <TextInput
+                <ThemedTextInput
                   style={styles.input}
                   placeholder="Ej. Juan Pérez"
-                  placeholderTextColor="#999"
                   value={nombre}
                   onChangeText={setNombre}
                 />
 
                 <Text style={styles.inputLabel}>Cédula</Text>
-                <TextInput
+                <ThemedTextInput
                   style={styles.input}
                   placeholder="Ej. 1718671662"
-                  placeholderTextColor="#999"
                   value={cedula}
                   onChangeText={setCedula}
                   keyboardType="numeric"
                 />
 
                 <Text style={styles.inputLabel}>Teléfono</Text>
-                <TextInput
+                <ThemedTextInput
                   style={styles.input}
                   placeholder="Ej. 0987654321"
-                  placeholderTextColor="#999"
                   value={telefono}
                   onChangeText={setTelefono}
                   keyboardType="numeric"
                 />
                 <Text style={styles.inputLabel}>Correo</Text>
-                <TextInput
+                <ThemedTextInput
                   style={styles.input}
                   placeholder="Ej.correo@gmail.com"
-                  placeholderTextColor="#999"
                   value={correo}
                   onChangeText={setCorreo}
                 />
                 <Text style={styles.inputLabel}>Dirección</Text>
-                <TextInput
+                <ThemedTextInput
                   style={styles.input}
                   placeholder="Ej. Av. Principal 123"
-                  placeholderTextColor="#999"
                   value={direccion}
                   onChangeText={setDireccion}
                 />
@@ -251,17 +254,18 @@ export const ClientesList: React.FC<any> = ({ navigation }) => {
                     { padding: 0, justifyContent: "center" },
                   ]}
                 >
-                  <Picker
+                  <ThemedPicker
                     selectedValue={estadoCliente}
-                    onValueChange={(itemValue) => setEstadoCliente(itemValue)}
-                    style={{ height: 50, width: "100%", color: "#333" }}
-                    dropdownIconColor="#333"
+                    onValueChange={(itemValue) =>
+                      setEstadoCliente(itemValue as string)
+                    }
+                    style={{ height: 50, width: "100%" }}
                     mode="dropdown"
                   >
-                    <Picker.Item label="Activo" value="activo" />
-                    <Picker.Item label="Inactivo" value="inactivo" />
-                    <Picker.Item label="Prospecto" value="prospecto" />
-                  </Picker>
+                    <ThemedPickerItem label="Activo" value="activo" />
+                    <ThemedPickerItem label="Inactivo" value="inactivo" />
+                    <ThemedPickerItem label="Prospecto" value="prospecto" />
+                  </ThemedPicker>
                 </View>
 
                 <View style={styles.modalButtons}>
