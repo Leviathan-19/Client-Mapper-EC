@@ -1,29 +1,28 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
   ScrollView,
-  TextInput,
   Alert,
   ActivityIndicator,
 } from "react-native";
-import { Picker } from "@react-native-picker/picker";
 import * as Location from "expo-location";
 import { useAgendamiento, AgendamientoProduct } from "./useAgendamiento";
-import { styles } from "./styles";
-
-const PickerItem = ({ label, value, ...props }: any) => (
-  <Picker.Item label={label} value={value} color="#000000" {...props} />
-);
-
-const CustomTextInput = (props: any) => (
-  <TextInput placeholderTextColor="#000000" {...props} />
-);
+import { createAgendamientoStyles } from "./styles";
+import { useAppTheme } from "../../../context/ThemeContext";
+import {
+  ThemedPicker,
+  ThemedPickerItem,
+  ThemedPickerContainer,
+} from "../../../components/ThemedPicker";
+import { ThemedTextInput } from "../../../components/ThemedTextInput";
 
 export const AgendamientoScreen: React.FC<any> = ({ navigation }) => {
   const { clientes, establecimientos, rutas, productos, saveAgendamiento } =
     useAgendamiento();
+  const { colors } = useAppTheme();
+  const styles = createAgendamientoStyles(colors);
 
   // Loading state
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -53,6 +52,47 @@ export const AgendamientoScreen: React.FC<any> = ({ navigation }) => {
   >([]);
   const [currentProductSelection, setCurrentProductSelection] =
     useState<string>("");
+
+  // Búsqueda en listas
+  const [rutaSearch, setRutaSearch] = useState("");
+  const [establecimientoSearch, setEstablecimientoSearch] = useState("");
+  const [clienteSearch, setClienteSearch] = useState("");
+  const [productoSearch, setProductoSearch] = useState("");
+
+  const filteredRutas = useMemo(() => {
+    const list = rutas.filter((r: any) =>
+      r.nombre?.toLowerCase().includes(rutaSearch.toLowerCase()),
+    );
+    // Mostrar solo las últimas 5 si no hay búsqueda
+    return rutaSearch ? list : list.slice(-5);
+  }, [rutas, rutaSearch]);
+
+  const filteredEstablecimientos = useMemo(() => {
+    const list = establecimientos.filter((e: any) =>
+      e.nombre_comercial
+        ?.toLowerCase()
+        .includes(establecimientoSearch.toLowerCase()),
+    );
+    return establecimientoSearch ? list : list.slice(-5);
+  }, [establecimientos, establecimientoSearch]);
+
+  const filteredClientes = useMemo(() => {
+    const searchLower = clienteSearch.toLowerCase();
+    const list = clientes.filter(
+      (c: any) =>
+        c.nombre?.toLowerCase().includes(searchLower) ||
+        (c.cedula && c.cedula.includes(searchLower)) ||
+        (c.telefono && c.telefono.includes(searchLower)),
+    );
+    return clienteSearch ? list : list.slice(-5);
+  }, [clientes, clienteSearch]);
+
+  const filteredProductos = useMemo(() => {
+    const list = productos.filter((p: any) =>
+      p.nombre?.toLowerCase().includes(productoSearch.toLowerCase()),
+    );
+    return productoSearch ? list : list.slice(-5);
+  }, [productos, productoSearch]);
 
   // Handle Establishment Change
   const handleEstablecimientoChange = (val: string) => {
@@ -182,7 +222,7 @@ export const AgendamientoScreen: React.FC<any> = ({ navigation }) => {
           disabled={isSubmitting}
         >
           {isSubmitting ? (
-            <ActivityIndicator color="#fff" />
+            <ActivityIndicator color={colors.onPrimary} />
           ) : (
             <Text style={styles.saveButtonText}>Guardar</Text>
           )}
@@ -193,36 +233,30 @@ export const AgendamientoScreen: React.FC<any> = ({ navigation }) => {
         {/* RUTA SECTION */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>1. Ruta</Text>
-          <View style={styles.pickerContainer}>
-            <Picker
+          <ThemedTextInput
+            style={[styles.input, { marginBottom: 10 }]}
+            placeholder="🔍 Buscar ruta..."
+            value={rutaSearch}
+            onChangeText={setRutaSearch}
+          />
+          <ThemedPickerContainer style={styles.pickerContainer}>
+            <ThemedPicker
               selectedValue={rutaId}
-              onValueChange={setRutaId}
+              onValueChange={(val) => setRutaId(String(val))}
               mode="dropdown"
-              style={{ color: "#ffffffff", backgroundColor: "#ec5a16ff" }}
-              dropdownIconColor="#000000ff"
             >
-              <PickerItem
-                label="-- Seleccione una Ruta --"
-                value=""
-                color="#ffffffff"
-              />
-              {rutas.map((r: any) => (
-                <PickerItem
-                  key={r.id}
-                  label={r.nombre}
-                  value={r.id}
-                  color="#ffffffff"
-                />
+              <ThemedPickerItem label="-- Seleccione una Ruta --" value="" />
+              {filteredRutas.map((r: any) => (
+                <ThemedPickerItem key={r.id} label={r.nombre} value={r.id} />
               ))}
-            </Picker>
-          </View>
+            </ThemedPicker>
+          </ThemedPickerContainer>
           {!rutaId && (
-            <CustomTextInput
+            <ThemedTextInput
               style={styles.input}
               placeholder="Crear Ruta"
               value={newRutaNombre}
               onChangeText={setNewRutaNombre}
-              color="#000000ff"
             />
           )}
         </View>
@@ -232,36 +266,41 @@ export const AgendamientoScreen: React.FC<any> = ({ navigation }) => {
           <Text style={styles.sectionTitle}>
             2. Establecimiento (Obligatorio)
           </Text>
-          <View style={styles.pickerContainer}>
-            <Picker
+          <ThemedTextInput
+            style={[styles.input, { marginBottom: 10 }]}
+            placeholder="🔍 Buscar establecimiento..."
+            value={establecimientoSearch}
+            onChangeText={setEstablecimientoSearch}
+          />
+          <ThemedPickerContainer style={styles.pickerContainer}>
+            <ThemedPicker
               selectedValue={establecimientoId}
-              onValueChange={handleEstablecimientoChange}
+              onValueChange={(val) => handleEstablecimientoChange(String(val))}
+              mode="dropdown"
             >
-              <PickerItem
-                color="#000000ff"
+              <ThemedPickerItem
                 label="-- Seleccione o Cree Nuevo --"
                 value=""
               />
-              {establecimientos.map((e: any) => (
-                <PickerItem
+              {filteredEstablecimientos.map((e: any) => (
+                <ThemedPickerItem
                   key={e.id}
                   label={e.nombre_comercial}
                   value={e.id}
-                  color="#000000ff"
                 />
               ))}
-            </Picker>
-          </View>
+            </ThemedPicker>
+          </ThemedPickerContainer>
 
           {!establecimientoId && (
             <>
-              <CustomTextInput
+              <ThemedTextInput
                 style={styles.input}
                 placeholder="Nombre Comercial"
                 value={newEstNombre}
                 onChangeText={setNewEstNombre}
               />
-              <CustomTextInput
+              <ThemedTextInput
                 style={[styles.input, { marginTop: 10 }]}
                 placeholder="Dirección"
                 value={newEstDireccion}
@@ -285,44 +324,51 @@ export const AgendamientoScreen: React.FC<any> = ({ navigation }) => {
         {/* CLIENTE SECTION */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>3. Cliente (Opcional)</Text>
-          <View style={styles.pickerContainer}>
-            <Picker selectedValue={clienteId} onValueChange={setClienteId}>
-              <PickerItem
-                label="-- Seleccione un Cliente --"
-                value=""
-                color="#000000ff"
-              />
-              {clientes.map((c: any) => (
-                <PickerItem
-                  key={c.id}
-                  label={c.nombre}
-                  value={c.id}
-                  color="#000000ff"
-                />
+          <ThemedTextInput
+            style={[styles.input, { marginBottom: 10 }]}
+            placeholder="🔍 Buscar cliente..."
+            value={clienteSearch}
+            onChangeText={setClienteSearch}
+          />
+          <ThemedPickerContainer style={styles.pickerContainer}>
+            <ThemedPicker
+              selectedValue={clienteId}
+              onValueChange={(val) => setClienteId(String(val))}
+              mode="dropdown"
+            >
+              <ThemedPickerItem label="-- Seleccione un Cliente --" value="" />
+              {filteredClientes.map((c: any) => (
+                <ThemedPickerItem key={c.id} label={c.nombre} value={c.id} />
               ))}
-            </Picker>
-          </View>
+            </ThemedPicker>
+          </ThemedPickerContainer>
 
           {!clienteId && (
             <>
-              <Text style={{ fontSize: 12, color: "#666", marginBottom: 5 }}>
+              <Text
+                style={{
+                  fontSize: 12,
+                  color: colors.textSecondary,
+                  marginBottom: 5,
+                }}
+              >
                 O complete para crear nuevo:
               </Text>
-              <CustomTextInput
+              <ThemedTextInput
                 style={styles.input}
                 placeholder="Nombre del Cliente"
                 value={newCliNombre}
                 onChangeText={setNewCliNombre}
               />
               <View style={{ flexDirection: "row", marginTop: 10, gap: 10 }}>
-                <CustomTextInput
+                <ThemedTextInput
                   style={[styles.input, { flex: 1 }]}
                   placeholder="Cédula"
                   value={newCliCedula}
                   onChangeText={setNewCliCedula}
                   keyboardType="numeric"
                 />
-                <CustomTextInput
+                <ThemedTextInput
                   style={[styles.input, { flex: 1 }]}
                   placeholder="Teléfono"
                   value={newCliTelefono}
@@ -338,35 +384,33 @@ export const AgendamientoScreen: React.FC<any> = ({ navigation }) => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>4. Detalles de Visita</Text>
           <Text style={styles.inputLabel}>Fecha Programada (YYYY-MM-DD)</Text>
-          <CustomTextInput
+          <ThemedTextInput
             style={styles.input}
             value={fechaProgramada}
             onChangeText={setFechaProgramada}
           />
           <Text style={styles.inputLabel}>Estado </Text>
-          <View style={styles.pickerContainer}>
-            <Picker
+          <ThemedPickerContainer style={styles.pickerContainer}>
+            <ThemedPicker
               selectedValue={estadoVisita}
-              onValueChange={setEstadoVisita}
-              style={{ color: "#000000ff" }}
+              onValueChange={(val) => setEstadoVisita(String(val))}
+              mode="dropdown"
             >
-              <PickerItem
-                label="Programada"
-                value="programada"
-                color="#000000ff"
-              />
-              <PickerItem
-                label="Completada"
-                value="completada"
-                color="#000000ff"
-              />
-            </Picker>
-          </View>
+              <ThemedPickerItem label="Programada" value="programada" />
+              <ThemedPickerItem label="Completada" value="completada" />
+            </ThemedPicker>
+          </ThemedPickerContainer>
         </View>
 
         {/* PRODUCTOS SECTION */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>5. Productos (Opcional)</Text>
+          <ThemedTextInput
+            style={[styles.input, { marginBottom: 10 }]}
+            placeholder="🔍 Buscar producto..."
+            value={productoSearch}
+            onChangeText={setProductoSearch}
+          />
           <View
             style={{
               flexDirection: "row",
@@ -374,29 +418,20 @@ export const AgendamientoScreen: React.FC<any> = ({ navigation }) => {
               marginBottom: 10,
             }}
           >
-            <View
+            <ThemedPickerContainer
               style={[styles.pickerContainer, { flex: 1, marginBottom: 0 }]}
             >
-              <Picker
+              <ThemedPicker
                 selectedValue={currentProductSelection}
-                onValueChange={setCurrentProductSelection}
-                style={{ backgroundColor: "#ffffff" }}
+                onValueChange={(val) => setCurrentProductSelection(String(val))}
+                mode="dropdown"
               >
-                <PickerItem
-                  label="-- Añadir Producto --"
-                  value=""
-                  color="#000000ff"
-                />
-                {productos.map((p: any) => (
-                  <PickerItem
-                    key={p.id}
-                    label={p.nombre}
-                    value={p.id}
-                    color="#000000ff"
-                  />
+                <ThemedPickerItem label="-- Añadir Producto --" value="" />
+                {filteredProductos.map((p: any) => (
+                  <ThemedPickerItem key={p.id} label={p.nombre} value={p.id} />
                 ))}
-              </Picker>
-            </View>
+              </ThemedPicker>
+            </ThemedPickerContainer>
             <TouchableOpacity
               style={[styles.saveButton, { marginLeft: 10 }]}
               onPress={handleAddProduct}
@@ -410,7 +445,7 @@ export const AgendamientoScreen: React.FC<any> = ({ navigation }) => {
               <Text style={styles.productName} numberOfLines={1}>
                 {prod.nombre}
               </Text>
-              <CustomTextInput
+              <ThemedTextInput
                 style={styles.productInput}
                 value={prod.cantidad}
                 onChangeText={(val: string) =>
@@ -419,7 +454,7 @@ export const AgendamientoScreen: React.FC<any> = ({ navigation }) => {
                 keyboardType="numeric"
                 placeholder="Cant"
               />
-              <CustomTextInput
+              <ThemedTextInput
                 style={styles.productInput}
                 value={prod.precio_unitario}
                 onChangeText={(val: string) =>
