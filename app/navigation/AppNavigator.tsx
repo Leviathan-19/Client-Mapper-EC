@@ -14,11 +14,13 @@ import { AgendamientoScreen } from "../views/Main_menu/Agendamiento";
 import { ActivityIndicator, View } from "react-native";
 import { ProfileNavbar } from "../views/Main_menu/ProfileNavbar";
 import { SqlRunner } from "../views/Main_menu/SqlRunner";
+import { useAppTheme } from "../context/ThemeContext";
 
 const Stack = createNativeStackNavigator();
 
 export const AppNavigator = () => {
   const { appState, setAppState, deviceId, checkDeviceStatus } = useAppInit();
+  const { navigationTheme } = useAppTheme();
 
   if (appState === "loading") {
     return (
@@ -30,7 +32,7 @@ export const AppNavigator = () => {
 
   return (
     <View style={{ flex: 1 }}>
-      <NavigationContainer>
+      <NavigationContainer theme={navigationTheme}>
         <View style={{ flex: 1 }}>
           {appState === "main_menu" && <ProfileNavbar />}
           <Stack.Navigator screenOptions={{ headerShown: false }}>

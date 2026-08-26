@@ -5,14 +5,30 @@ import { PowerSyncContext } from '@powersync/react-native';
 import { powerSync } from './powerSync';
 import { AppNavigator } from './navigation/AppNavigator';
 import { SessionProvider } from './context/SessionContext';
+import { ThemeProvider, useAppTheme } from './context/ThemeContext';
+
+function AppContent() {
+  const { isDarkMode, colors } = useAppTheme();
+
+  return (
+    <>
+      <AppNavigator />
+      <StatusBar
+        style={isDarkMode ? 'light' : 'dark'}
+        backgroundColor={colors.background}
+      />
+    </>
+  );
+}
 
 export default function App() {
   return (
     <PowerSyncContext.Provider value={powerSync}>
-      <SessionProvider>
-        <AppNavigator />
-        <StatusBar style="auto" />
-      </SessionProvider>
+      <ThemeProvider>
+        <SessionProvider>
+          <AppContent />
+        </SessionProvider>
+      </ThemeProvider>
     </PowerSyncContext.Provider>
   );
 }
