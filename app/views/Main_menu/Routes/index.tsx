@@ -1,18 +1,30 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, FlatList, Modal, TextInput, Alert } from 'react-native';
-import { useRoutes, Route } from './useRoutes';
-import { styles } from './styles';
+import React, { useState, useMemo } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  FlatList,
+  Modal,
+  Alert,
+} from "react-native";
+import { useAppTheme } from "../../../context/ThemeContext";
+import { ThemedTextInput } from "../../../components/ThemedTextInput";
+import { useRoutes, Route } from "./useRoutes";
+import { createRoutesStyles } from "./styles";
 
 export const RoutesList: React.FC<any> = ({ navigation }) => {
+  const { colors } = useAppTheme();
+  const styles = createRoutesStyles(colors);
   const { routes, createRoute, updateRouteName } = useRoutes();
 
   const [modalVisible, setModalVisible] = useState(false);
+  const [rutaSearch, setRutaSearch] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [nombre, setNombre] = useState('');
+  const [nombre, setNombre] = useState("");
 
   const openCreateModal = () => {
     setEditingId(null);
-    setNombre('');
+    setNombre("");
     setModalVisible(true);
   };
 
@@ -24,7 +36,7 @@ export const RoutesList: React.FC<any> = ({ navigation }) => {
 
   const handleSave = async () => {
     if (!nombre.trim()) {
-      Alert.alert('Error', 'El nombre de la ruta es obligatorio');
+      Alert.alert("Error", "El nombre de la ruta es obligatorio");
       return;
     }
 
@@ -36,37 +48,37 @@ export const RoutesList: React.FC<any> = ({ navigation }) => {
       }
       setModalVisible(false);
     } catch (e: any) {
-      Alert.alert('Error', e.message);
+      Alert.alert("Error", e.message);
     }
   };
 
   const formatDate = (isoString: string | null) => {
-    if (!isoString) return 'N/A';
+    if (!isoString) return "N/A";
     try {
       const date = new Date(isoString);
       if (isNaN(date.getTime())) return isoString;
 
       // Si la cadena tiene longitud 10 y no contiene 'T', es solo fecha (YYYY-MM-DD)
-      if (isoString.length === 10 && !isoString.includes('T')) {
-        const [year, month, day] = isoString.split('-').map(Number);
+      if (isoString.length === 10 && !isoString.includes("T")) {
+        const [year, month, day] = isoString.split("-").map(Number);
         const localDate = new Date(year, month - 1, day);
-        return localDate.toLocaleDateString('es-EC', {
-          year: 'numeric',
-          month: 'short',
-          day: 'numeric',
+        return localDate.toLocaleDateString("es-EC", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
         });
       }
 
       // Si es un timestamp completo con hora, mostrar fecha y hora local (hh:mm)
-      const datePart = date.toLocaleDateString('es-EC', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
+      const datePart = date.toLocaleDateString("es-EC", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
       });
-      const timePart = date.toLocaleTimeString('es-EC', {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false
+      const timePart = date.toLocaleTimeString("es-EC", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
       });
       return `${datePart} ${timePart}`;
     } catch {
@@ -77,7 +89,12 @@ export const RoutesList: React.FC<any> = ({ navigation }) => {
   const renderItem = ({ item }: { item: Route }) => (
     <TouchableOpacity
       style={styles.card}
-      onPress={() => navigation.navigate('RouteDetail', { rutaId: item.id, rutaNombre: item.nombre })}
+      onPress={() =>
+        navigation.navigate("RouteDetail", {
+          rutaId: item.id,
+          rutaNombre: item.nombre,
+        })
+      }
     >
       <View style={styles.cardHeaderRow}>
         <Text style={styles.cardTitle}>{item.nombre}</Text>
@@ -88,27 +105,42 @@ export const RoutesList: React.FC<any> = ({ navigation }) => {
           <Text style={styles.actionText}>Editar</Text>
         </TouchableOpacity>
       </View>
-      
-      <Text style={styles.cardText}>Fecha: {formatDate(item.created_at || item.fecha)}</Text>
-      <Text style={styles.cardText}>Creador: {item.creador_nombre || 'N/A'}</Text>
-      
+
+      <Text style={styles.cardText}>
+        Fecha: {formatDate(item.created_at || item.fecha)}
+      </Text>
+      <Text style={styles.cardText}>
+        Creador: {item.creador_nombre || "N/A"}
+      </Text>
+
       <View style={styles.cardFooter}>
         <View style={styles.visitsBadge}>
           <Text style={styles.visitsBadgeText}>
-            {item.total_visitas === 1 ? '1 Visita' : `${item.total_visitas || 0} Visitas`}
+            {item.total_visitas === 1
+              ? "1 Visita"
+              : `${item.total_visitas || 0} Visitas`}
           </Text>
         </View>
-        <Text style={{ fontSize: 12, color: '#007bff', fontWeight: 'bold' }}>
+        <Text style={{ fontSize: 12, color: "#007bff", fontWeight: "bold" }}>
           Ver detalle ➔
         </Text>
       </View>
     </TouchableOpacity>
   );
 
+  const filteredRoutes = useMemo(() => {
+    return routes.filter((r) =>
+      r.nombre.toLowerCase().includes(rutaSearch.toLowerCase()),
+    );
+  }, [routes, rutaSearch]);
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
           <Text style={styles.backText}>🔙</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Rutas Planificadas</Text>
@@ -117,8 +149,15 @@ export const RoutesList: React.FC<any> = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
+      <ThemedTextInput
+        style={styles.searchBar}
+        placeholder="Buscar rutas..."
+        value={rutaSearch}
+        onChangeText={setRutaSearch}
+      />
+
       <FlatList
-        data={routes}
+        data={filteredRoutes}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         contentContainerStyle={styles.list}
@@ -132,11 +171,13 @@ export const RoutesList: React.FC<any> = ({ navigation }) => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
             <Text style={styles.modalTitle}>
-              {editingId ? 'Editar Nombre de Ruta' : 'Nueva Ruta'}
+              {editingId ? "Editar Nombre de Ruta" : "Nueva Ruta"}
             </Text>
 
-            <Text style={styles.inputLabel}>Nombre de la Ruta (Obligatorio)</Text>
-            <TextInput
+            <Text style={styles.inputLabel}>
+              Nombre de la Ruta (Obligatorio)
+            </Text>
+            <ThemedTextInput
               style={styles.input}
               placeholder="Ej. Ruta Norte - Vendedores"
               value={nombre}
