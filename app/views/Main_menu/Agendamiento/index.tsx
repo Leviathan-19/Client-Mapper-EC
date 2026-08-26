@@ -194,18 +194,24 @@ export const AgendamientoScreen: React.FC<any> = ({ navigation }) => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>1. Ruta</Text>
           <View style={styles.pickerContainer}>
-            <Picker selectedValue={rutaId} onValueChange={setRutaId}>
+            <Picker
+              selectedValue={rutaId}
+              onValueChange={setRutaId}
+              mode="dropdown"
+              style={{ color: "#ffffffff", backgroundColor: "#ec5a16ff" }}
+              dropdownIconColor="#000000ff"
+            >
               <PickerItem
                 label="-- Seleccione una Ruta --"
                 value=""
-                color="#000000ff"
+                color="#ffffffff"
               />
               {rutas.map((r: any) => (
                 <PickerItem
                   key={r.id}
                   label={r.nombre}
                   value={r.id}
-                  color="#000000ff"
+                  color="#ffffffff"
                 />
               ))}
             </Picker>
