@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useSession } from '../../context/SessionContext';
 import { useNavigation } from '@react-navigation/native';
@@ -9,6 +9,12 @@ import { useNavigation } from '@react-navigation/native';
 export const ProfileNavbar: React.FC = () => {
   const { userName, empresaNombre } = useSession();
   const navigation = useNavigation<any>();
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  const toggleTheme = () => {
+    setIsDarkMode(!isDarkMode);
+    // TODO: Implementar la actualización del tema global aquí
+  };
 
   return (
     <View style={styles.container}>
@@ -18,11 +24,13 @@ export const ProfileNavbar: React.FC = () => {
       </View>
       
       <TouchableOpacity 
-        style={styles.settingsButton} 
-        onPress={() => navigation.navigate('SqlRunner')}
-        activeOpacity={0.7}
+        style={[styles.themeButton, isDarkMode ? styles.themeButtonDark : styles.themeButtonLight]} 
+        onPress={toggleTheme}
+        activeOpacity={0.8}
       >
-        <Text style={styles.settingsIcon}>⚙️</Text>
+        <View style={[styles.themeToggle, isDarkMode ? styles.themeToggleRight : styles.themeToggleLeft]}>
+          <Text style={styles.themeIcon}>{isDarkMode ? '🌙' : '☀️'}</Text>
+        </View>
       </TouchableOpacity>
     </View>
   );
@@ -59,19 +67,42 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 2,
   },
-  settingsButton: {
-    padding: 8,
-    borderRadius: 20,
-    backgroundColor: '#f1f3f5',
-    width: 40,
-    height: 40,
+  themeButton: {
+    width: 60,
+    height: 32,
+    borderRadius: 16,
+    padding: 2,
     justifyContent: 'center',
-    alignItems: 'center',
     marginLeft: 10,
   },
-  settingsIcon: {
-    fontSize: 22,
-    color: '#495057',
+  themeButtonLight: {
+    backgroundColor: '#e9ecef',
+  },
+  themeButtonDark: {
+    backgroundColor: '#343a40',
+  },
+  themeToggle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  themeToggleLeft: {
+    alignSelf: 'flex-start',
+  },
+  themeToggleRight: {
+    alignSelf: 'flex-end',
+    backgroundColor: '#495057',
+  },
+  themeIcon: {
+    fontSize: 14,
   },
 });
 
