@@ -1,26 +1,50 @@
-import React, { useMemo, useRef } from "react";
-import { View, StyleSheet, Text } from "react-native";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+
+import {
+  View,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  Animated,
+  Alert,
+} from "react-native";
+
 import * as MapboxGL from "@maplibre/maplibre-react-native";
+import * as Location from "expo-location";
+
 import { VisitaMapItem } from "./useVisits";
 
 const MAP_STYLE = process.env.EXPO_PUBLIC_MAP_STYLE_URL;
+
+/**
+ * Cada cuánto intentamos actualizar
+ * la ubicación del usuario.
+ *
+ * 30 segundos.
+ */
+const LOCATION_UPDATE_INTERVAL = 30_000;
 
 interface MapViewProps {
   items: VisitaMapItem[];
   onPinPress: (item: VisitaMapItem) => void;
 }
+
 /**
- * El tamaño depende del nivel de zoom:
- * Zoom 3  -> 2 px
- * Zoom 5  -> 3 px
- * Zoom 10 -> 5 px
- * Zoom 14 -> 7 px
- * Zoom 18 -> 9 px
- *
- * Los puntos son deliberadamente pequeños para evitar
- * que establecimientos cercanos se sobrepongan demasiado.
+ * ============================================================
+ * ESTILOS DE LOS ESTABLECIMIENTOS
+ * ============================================================
  */
+
 const mapStyles = {
+  /**
+   * Establecimientos individuales.
+   */
   circle: {
     circleRadius: [
       "interpolate",
@@ -44,36 +68,45 @@ const mapStyles = {
     ],
 
     circleStrokeWidth: 1.5,
+
     circleStrokeColor: "#ffffff",
+
     circleColor: [
       "match",
       ["get", "estado_comercial"],
+
       "no_interesado",
       "#c73737",
+
       "por_visitar",
       "#eab308",
+
       "atendido",
       "#28a745",
+
       // Estado desconocido
       "#007bff",
     ],
   },
+
   /**
-   * Estilo de los clusters.
-   *
-   * El tamaño depende de la cantidad
-   * de establecimientos agrupados.
+   * Clusters.
    */
   clusterCircle: {
     circleColor: [
       "step",
       ["get", "point_count"],
+
       // 2 - 10 establecimientos
       "#2563eb",
+
       10,
-      // 11 - 50 establecimientos
+
+      // 11 - 50
       "#7c3aed",
+
       50,
+
       // Más de 50
       "#dc2626",
     ],
@@ -81,23 +114,179 @@ const mapStyles = {
     circleRadius: [
       "step",
       ["get", "point_count"],
+
       // 2 - 10
       18,
+
       10,
+
       // 11 - 50
       23,
+
       50,
+
       // Más de 50
       28,
     ],
+
     circleStrokeWidth: 2,
+
     circleStrokeColor: "#ffffff",
   },
 };
 
+/**
+ * ============================================================
+ * MARCADOR DE UBICACIÓN DEL USUARIO
+ * ============================================================
+ *
+ * Este componente NO pertenece al GeoJSONSource.
+ *
+ * Por eso:
+ *
+ * - NO forma parte de los clusters.
+ * - NO se mezcla con los establecimientos.
+ * - Siempre representa al usuario.
+ *
+ * Utilizamos Marker porque permite renderizar
+ * componentes React Native personalizados.
+ */
+const UserLocationMarker: React.FC = () => {
+  /**
+   * Valor de animación del pulso.
+   *
+   * 0 = estado inicial
+   * 1 = pulso expandido
+   */
+  const pulseAnimation = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    /**
+     * Animación infinita.
+     *
+     * El círculo exterior:
+     *
+     * pequeño + visible
+     *       ↓
+     * grande + transparente
+     *       ↓
+     * pequeño + visible
+     */
+    const animation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnimation, {
+          toValue: 1,
+          duration: 1200,
+          useNativeDriver: true,
+        }),
+
+        Animated.timing(pulseAnimation, {
+          toValue: 0,
+          duration: 0,
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+
+    animation.start();
+
+    /**
+     * Detenemos la animación
+     * cuando el componente desaparece.
+     */
+    return () => {
+      animation.stop();
+    };
+  }, [pulseAnimation]);
+
+  /**
+   * El anillo exterior crece.
+   */
+  const pulseScale = pulseAnimation.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 2.8],
+  });
+
+  /**
+   * El anillo exterior se vuelve transparente.
+   */
+  const pulseOpacity = pulseAnimation.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.55, 0],
+  });
+
+  return (
+    <View style={styles.userMarkerContainer}>
+      {/* Anillo pulsante */}
+      <Animated.View
+        pointerEvents="none"
+        style={[
+          styles.userPulse,
+          {
+            transform: [
+              {
+                scale: pulseScale,
+              },
+            ],
+            opacity: pulseOpacity,
+          },
+        ]}
+      />
+
+      {/* Anillo blanco */}
+      <View pointerEvents="none" style={styles.userMarkerBorder}>
+        {/* Punto azul central */}
+        <View pointerEvents="none" style={styles.userMarkerDot} />
+      </View>
+    </View>
+  );
+};
+
 export const MapView: React.FC<MapViewProps> = ({ items, onPinPress }) => {
+  /**
+   * ============================================================
+   * REFERENCIAS
+   * ============================================================
+   */
+
   const sourceRef = useRef<MapboxGL.GeoJSONSourceRef>(null);
+
   const cameraRef = useRef<MapboxGL.CameraRef>(null);
+
+  /**
+   * ============================================================
+   * ESTADO DE UBICACIÓN
+   * ============================================================
+   */
+
+  /**
+   * Indica si el modo "mi ubicación"
+   * está actualmente activo.
+   */
+  const [isLocationEnabled, setIsLocationEnabled] = useState(false);
+
+  /**
+   * Coordenadas actuales del usuario.
+   *
+   * null = no estamos mostrando ubicación.
+   */
+  const [userLocation, setUserLocation] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
+
+  /**
+   * Evita que se ejecuten simultáneamente
+   * varias consultas GPS.
+   */
+  const locationRequestInProgress = useRef(false);
+
+  /**
+   * ============================================================
+   * GEOJSON DE ESTABLECIMIENTOS
+   * ============================================================
+   */
+
   const geoJsonSource = useMemo(() => {
     const validItems = items.filter(
       (item) =>
@@ -125,11 +314,262 @@ export const MapView: React.FC<MapViewProps> = ({ items, onPinPress }) => {
 
         geometry: {
           type: "Point",
+
+          /**
+           * GeoJSON:
+           *
+           * [longitud, latitud]
+           */
           coordinates: [item.longitud, item.latitud],
         },
       })),
     };
   }, [items]);
+
+  /**
+   * ============================================================
+   * ACTUALIZAR UBICACIÓN
+   * ============================================================
+   */
+
+  const updateUserLocation = useCallback(async () => {
+    /**
+     * Evitamos consultas simultáneas.
+     */
+    if (locationRequestInProgress.current) {
+      return;
+    }
+
+    locationRequestInProgress.current = true;
+
+    try {
+      /**
+       * Verificamos que el servicio de ubicación
+       * esté habilitado en el dispositivo.
+       */
+      const servicesEnabled = await Location.hasServicesEnabledAsync();
+
+      if (!servicesEnabled) {
+        console.log("⚠️ Los servicios de ubicación están desactivados.");
+
+        return;
+      }
+
+      /**
+       * Obtenemos la posición actual.
+       *
+       * High busca una precisión aproximada
+       * de hasta unos metros cuando el dispositivo
+       * puede proporcionarla.
+       */
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+      });
+
+      const latitude = location.coords.latitude;
+
+      const longitude = location.coords.longitude;
+
+      /**
+       * Validación.
+       */
+      if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+        console.log("⚠️ Coordenadas GPS inválidas.");
+
+        return;
+      }
+
+      /**
+       * Actualizamos nuestro marcador.
+       */
+      setUserLocation({
+        latitude,
+        longitude,
+      });
+
+      console.log("📍 Ubicación actualizada:", {
+        latitude,
+        longitude,
+        accuracy: location.coords.accuracy,
+      });
+    } catch (error) {
+      console.error("🔴 Error obteniendo ubicación:", error);
+    } finally {
+      locationRequestInProgress.current = false;
+    }
+  }, []);
+
+  /**
+   * ============================================================
+   * ACTIVAR / DESACTIVAR UBICACIÓN
+   * ============================================================
+   */
+
+  const toggleUserLocation = useCallback(async () => {
+    /**
+     * --------------------------------------------------------
+     * DESACTIVAR
+     * --------------------------------------------------------
+     */
+
+    if (isLocationEnabled) {
+      console.log("📍 Ubicación desactivada.");
+
+      setIsLocationEnabled(false);
+
+      /**
+       * Al eliminar la coordenada:
+       *
+       * userLocation = null
+       *
+       * desaparece el Marker.
+       */
+      setUserLocation(null);
+
+      return;
+    }
+
+    /**
+     * --------------------------------------------------------
+     * ACTIVAR
+     * --------------------------------------------------------
+     */
+
+    try {
+      console.log("📍 Solicitando permiso de ubicación...");
+
+      /**
+       * Pedimos permiso SOLO cuando el usuario
+       * pulsa el botón.
+       */
+      const { status } = await Location.requestForegroundPermissionsAsync();
+
+      /**
+       * Usuario rechazó.
+       */
+      if (status !== "granted") {
+        console.log("❌ Permiso de ubicación rechazado.");
+
+        Alert.alert(
+          "Ubicación desactivada",
+          "Necesitamos permiso de ubicación para mostrar tu posición en el mapa.",
+        );
+
+        setIsLocationEnabled(false);
+
+        return;
+      }
+
+      console.log("✅ Permiso de ubicación concedido.");
+
+      /**
+       * Activamos el modo.
+       */
+      setIsLocationEnabled(true);
+
+      /**
+       * Obtenemos inmediatamente
+       * la primera ubicación.
+       */
+      await updateUserLocation();
+    } catch (error) {
+      console.error("🔴 Error activando ubicación:", error);
+
+      setIsLocationEnabled(false);
+    }
+  }, [isLocationEnabled, updateUserLocation]);
+
+  /**
+   * ============================================================
+   * ACTUALIZACIÓN AUTOMÁTICA CADA 30 SEGUNDOS
+   * ============================================================
+   */
+
+  useEffect(() => {
+    /**
+     * Si la funcionalidad está desactivada,
+     * no hacemos absolutamente nada.
+     */
+    if (!isLocationEnabled) {
+      return;
+    }
+
+    console.log("🔄 Actualización automática de ubicación activada.");
+
+    /**
+     * Primera actualización inmediata
+     * ya se hizo al activar el botón.
+     *
+     * Aquí programamos las siguientes.
+     */
+    const interval = setInterval(() => {
+      updateUserLocation();
+    }, LOCATION_UPDATE_INTERVAL);
+
+    /**
+     * IMPORTANTE:
+     *
+     * Al desactivar la ubicación:
+     *
+     * clearInterval()
+     *
+     * Esto evita seguir consultando GPS.
+     */
+    return () => {
+      console.log("⏹️ Actualización automática de ubicación detenida.");
+
+      clearInterval(interval);
+    };
+  }, [isLocationEnabled, updateUserLocation]);
+
+  /**
+   * ============================================================
+   * CENTRAR MAPA EN EL USUARIO
+   * ============================================================
+   *
+   * Se ejecuta cuando conseguimos la primera
+   * coordenada después de activar la ubicación.
+   */
+
+  const previousUserLocation = useRef<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!userLocation) {
+      previousUserLocation.current = null;
+
+      return;
+    }
+
+    /**
+     * Solo centramos automáticamente
+     * cuando se obtiene la primera ubicación.
+     *
+     * NO centramos cada 30 segundos.
+     *
+     * Esto es importante porque si el usuario
+     * mueve manualmente el mapa no queremos
+     * "secuestrar" la cámara cada 30 segundos.
+     */
+    if (!previousUserLocation.current) {
+      cameraRef.current?.flyTo({
+        center: [userLocation.longitude, userLocation.latitude],
+        zoom: 15,
+        duration: 800,
+      });
+    }
+
+    previousUserLocation.current = userLocation;
+  }, [userLocation]);
+
+  /**
+   * ============================================================
+   * CLICK SOBRE CLUSTER / ESTABLECIMIENTO
+   * ============================================================
+   */
+
   const handlePress = async (event: any) => {
     const feature = event.features?.[0];
 
@@ -144,22 +584,11 @@ export const MapView: React.FC<MapViewProps> = ({ items, onPinPress }) => {
     }
 
     /**
-     * =====================================================
-     * CASO 1: EL USUARIO PRESIONÓ UN CLUSTER
-     * =====================================================
-     *
-     * Los clusters creados por MapLibre tienen:
-     *
-     * point_count
-     * cluster_id
-     *
-     * Por ejemplo:
-     *
-     * {
-     *   cluster_id: 42,
-     *   point_count: 25
-     * }
+     * --------------------------------------------------------
+     * CLUSTER
+     * --------------------------------------------------------
      */
+
     const isCluster = properties.point_count !== undefined;
 
     if (isCluster) {
@@ -176,6 +605,7 @@ export const MapView: React.FC<MapViewProps> = ({ items, onPinPress }) => {
         if (expansionZoom === undefined || expansionZoom === null) {
           return;
         }
+
         const coordinates = feature.geometry?.coordinates;
 
         if (!Array.isArray(coordinates) || coordinates.length < 2) {
@@ -183,6 +613,7 @@ export const MapView: React.FC<MapViewProps> = ({ items, onPinPress }) => {
         }
 
         const longitude = Number(coordinates[0]);
+
         const latitude = Number(coordinates[1]);
 
         if (!Number.isFinite(longitude) || !Number.isFinite(latitude)) {
@@ -202,9 +633,9 @@ export const MapView: React.FC<MapViewProps> = ({ items, onPinPress }) => {
     }
 
     /**
-     * =====================================================
-     * CASO 2: EL USUARIO PRESIONÓ UN ESTABLECIMIENTO
-     * =====================================================
+     * --------------------------------------------------------
+     * ESTABLECIMIENTO
+     * --------------------------------------------------------
      */
 
     const id = properties.id;
@@ -213,10 +644,6 @@ export const MapView: React.FC<MapViewProps> = ({ items, onPinPress }) => {
       return;
     }
 
-    /**
-     * Buscamos el establecimiento original
-     * dentro de "items".
-     */
     const selectedItem = items.find((item) => String(item.id) === String(id));
 
     if (selectedItem) {
@@ -225,9 +652,11 @@ export const MapView: React.FC<MapViewProps> = ({ items, onPinPress }) => {
   };
 
   /**
-   * Si no existe la URL del estilo del mapa,
-   * mostramos un mensaje en lugar del mapa.
+   * ============================================================
+   * MAP STYLE
+   * ============================================================
    */
+
   if (!MAP_STYLE) {
     return (
       <View style={styles.errorContainer}>
@@ -239,6 +668,12 @@ export const MapView: React.FC<MapViewProps> = ({ items, onPinPress }) => {
       </View>
     );
   }
+
+  /**
+   * ============================================================
+   * RENDER
+   * ============================================================
+   */
 
   return (
     <View style={styles.container}>
@@ -262,9 +697,10 @@ export const MapView: React.FC<MapViewProps> = ({ items, onPinPress }) => {
       >
         {/*
          * =====================================================
-         * Vista principal al inicar el mapa
+         * CÁMARA
          * =====================================================
          */}
+
         <MapboxGL.Camera
           ref={cameraRef}
           initialViewState={{
@@ -275,18 +711,9 @@ export const MapView: React.FC<MapViewProps> = ({ items, onPinPress }) => {
 
         {/*
          * =====================================================
-         * CÁMARA
+         * ESTABLECIMIENTOS + CLUSTERS
          * =====================================================
          */}
-        <MapboxGL.Camera
-          ref={cameraRef}
-          initialViewState={{
-            zoom: 11,
-            center: [-78.497218, -0.106968],
-          }}
-        />
-
-        <MapboxGL.UserLocation heading={true} accuracy={true} />
 
         <MapboxGL.GeoJSONSource
           ref={sourceRef}
@@ -298,6 +725,10 @@ export const MapView: React.FC<MapViewProps> = ({ items, onPinPress }) => {
           clusterMaxZoom={14}
           onPress={handlePress}
         >
+          {/*
+           * CLUSTERS
+           */}
+
           <MapboxGL.Layer
             id="establecimientosClusters"
             type="circle"
@@ -306,10 +737,7 @@ export const MapView: React.FC<MapViewProps> = ({ items, onPinPress }) => {
           />
 
           {/*
-           * 🔴 no_interesado
-           * 🟡 por_visitar
-           * 🟢 atendido
-           * 🔵 desconocido
+           * ESTABLECIMIENTOS INDIVIDUALES
            */}
 
           <MapboxGL.Layer
@@ -319,10 +747,68 @@ export const MapView: React.FC<MapViewProps> = ({ items, onPinPress }) => {
             paint={mapStyles.circle as any}
           />
         </MapboxGL.GeoJSONSource>
+
+        {/*
+         * =====================================================
+         * UBICACIÓN DEL USUARIO
+         * =====================================================
+         *
+         * IMPORTANTE:
+         *
+         * Este Marker está FUERA del GeoJSONSource.
+         *
+         * Por lo tanto:
+         *
+         * NO se agrupa.
+         * NO se convierte en cluster.
+         * NO comparte colores con establecimientos.
+         */}
+
+        {userLocation && (
+          <MapboxGL.Marker
+            id="user-location-marker"
+            lngLat={[userLocation.longitude, userLocation.latitude]}
+          >
+            <UserLocationMarker />
+          </MapboxGL.Marker>
+        )}
       </MapboxGL.Map>
+
+      {/*
+       * =======================================================
+       * BOTÓN "MI UBICACIÓN"
+       * =======================================================
+       *
+       * Está fuera del Map para poder posicionarlo
+       * como una interfaz de React Native.
+       */}
+
+      <TouchableOpacity
+        activeOpacity={0.75}
+        onPress={toggleUserLocation}
+        style={[
+          styles.locationButton,
+          isLocationEnabled && styles.locationButtonActive,
+        ]}
+      >
+        <Text
+          style={[
+            styles.locationButtonIcon,
+            isLocationEnabled && styles.locationButtonIconActive,
+          ]}
+        >
+          🌐
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 };
+
+/**
+ * ============================================================
+ * ESTILOS
+ * ============================================================
+ */
 
 const styles = StyleSheet.create({
   container: {
@@ -334,18 +820,147 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
-  errorContainer: {
-    flex: 1,
+  /**
+   * ==========================================================
+   * BOTÓN DE UBICACIÓN
+   * ==========================================================
+   */
+
+  locationButton: {
+    position: "absolute",
+
+    top: 16,
+    left: 16,
+
+    width: 50,
+    height: 50,
+
+    borderRadius: 25,
+
+    backgroundColor: "#ffffff",
+
     justifyContent: "center",
     alignItems: "center",
+
+    elevation: 5,
+
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
+
+  locationButtonActive: {
+    backgroundColor: "#e8f1ff",
+  },
+
+  locationButtonIcon: {
+    fontSize: 32,
+    lineHeight: 36,
+
+    color: "#555555",
+    fontWeight: "bold",
+  },
+
+  locationButtonIconActive: {
+    color: "#1976d2",
+  },
+
+  /**
+   * ==========================================================
+   * MARCADOR DEL USUARIO
+   * ==========================================================
+   */
+
+  userMarkerContainer: {
+    width: 40,
+    height: 40,
+
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  /**
+   * Anillo que crece y desaparece.
+   */
+
+  userPulse: {
+    position: "absolute",
+
+    width: 18,
+    height: 18,
+
+    borderRadius: 9,
+
+    backgroundColor: "rgba(25, 118, 210, 0.35)",
+  },
+
+  /**
+   * Círculo blanco exterior.
+   */
+
+  userMarkerBorder: {
+    width: 18,
+    height: 18,
+
+    borderRadius: 9,
+
+    backgroundColor: "#ffffff",
+
+    justifyContent: "center",
+    alignItems: "center",
+
+    elevation: 4,
+
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+  },
+
+  /**
+   * Punto azul central.
+   */
+
+  userMarkerDot: {
+    width: 12,
+    height: 12,
+
+    borderRadius: 6,
+
+    backgroundColor: "#1976d2",
+  },
+
+  /**
+   * ==========================================================
+   * ERROR
+   * ==========================================================
+   */
+
+  errorContainer: {
+    flex: 1,
+
+    justifyContent: "center",
+    alignItems: "center",
+
     padding: 20,
+
     backgroundColor: "#fff",
   },
 
   errorText: {
     fontSize: 16,
+
     color: "#d9534f",
+
     textAlign: "center",
+
     fontWeight: "bold",
   },
 });
