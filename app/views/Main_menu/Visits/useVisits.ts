@@ -101,7 +101,8 @@ export const useVisits = () => {
 
   const completeVisit = async (visitId: string, establecimientoId: string) => {
     try {
-      const now = new Date().toISOString();
+      const { getLocalISOString } = require('../../../utils/dateUtils');
+      const now = getLocalISOString();
       await powerSync.execute(
         `UPDATE visitas SET estado_visita = 'completada', fecha_realizada = ? WHERE id = ?`,
         [now, visitId]
