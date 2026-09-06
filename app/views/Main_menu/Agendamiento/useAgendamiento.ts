@@ -1,6 +1,7 @@
 import { usePowerSync, usePowerSyncWatchedQuery } from "@powersync/react-native";
 import { v4 as uuidv4 } from "uuid";
 import { useSession } from "../../../context/SessionContext";
+import { getLocalDateString } from "../../../utils/dateUtils";
 
 export interface AgendamientoProduct {
   id: string;
@@ -56,7 +57,7 @@ export const useAgendamiento = () => {
         finalRutaId = uuidv4();
         await tx.execute(
           `INSERT INTO rutas (id, empresa_id, asignado_a, nombre, fecha, estado_ruta) VALUES (?, ?, ?, ?, ?, ?)`,
-          [finalRutaId, empresaId, usuarioId, newRutaNombre, new Date().toISOString().split('T')[0], 'activa']
+          [finalRutaId, empresaId, usuarioId, newRutaNombre, getLocalDateString(), 'activa']
         );
       } else if (!finalRutaId) {
         throw new Error("Debe seleccionar o crear una ruta");
