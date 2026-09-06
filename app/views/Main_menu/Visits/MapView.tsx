@@ -704,29 +704,31 @@ export const MapView: React.FC<MapViewProps> = ({ items, onPinPress }) => {
           ref={sourceRef}
           id="establecimientosSource"
           data={geoJsonSource as any}
-          cluster={true}
+          cluster={false} // clustering desactivado temporalmente
           clusterRadius={50}
           clusterMinPoints={2}
           clusterMaxZoom={14}
           onPress={handlePress}
         >
+          {/* Desactivado temporalmente
           <MapboxGL.Layer
             id="establecimientosClusters"
             type="circle"
             filter={["has", "point_count"]}
             paint={mapStyles.clusterCircle as any}
           />
+          */}
           <MapboxGL.Layer
             id="establecimientosLayer"
             type="circle"
-            filter={["!", ["has", "point_count"]]}
+            // filter={["!", ["has", "point_count"]]}
             paint={mapStyles.circle as any}
           />
 
           <MapboxGL.Layer
             id="establecimientosLabels"
             type="symbol"
-            filter={["!", ["has", "point_count"]]}
+            // filter={["!", ["has", "point_count"]]}
             layout={{
               "text-field": ["get", "nombre_comercial"],
 
