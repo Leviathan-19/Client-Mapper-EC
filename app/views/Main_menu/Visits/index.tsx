@@ -13,6 +13,7 @@ export const VisitsList: React.FC<any> = ({ navigation }) => {
   
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
+  const [applyDateFilters, setApplyDateFilters] = useState(true);
   const [visitSearch, setVisitSearch] = useState("");
   const [selectedItem, setSelectedItem] = useState<VisitaMapItem | null>(null);
 
@@ -94,6 +95,10 @@ export const VisitsList: React.FC<any> = ({ navigation }) => {
     return visitasMapItems.filter((v) => {
       const matchSearch = v.nombre_comercial?.toLowerCase().includes(visitSearch.toLowerCase());
       
+      if (!applyDateFilters) {
+        return matchSearch; // Si el filtro de fechas está apagado, mostramos todos los que coincidan con la búsqueda
+      }
+
       const matchDate = v.visitas.some(visita => {
         if (!visita.fecha_programada) return false;
         const d = new Date(visita.fecha_programada);
@@ -108,7 +113,7 @@ export const VisitsList: React.FC<any> = ({ navigation }) => {
 
       return matchSearch && matchDate;
     });
-  }, [visitasMapItems, visitSearch, selectedYear, selectedMonth]);
+  }, [visitasMapItems, visitSearch, selectedYear, selectedMonth, applyDateFilters]);
 
   return (
     <View style={styles.container}>
@@ -154,14 +159,32 @@ export const VisitsList: React.FC<any> = ({ navigation }) => {
             />
             
             <View style={{ marginHorizontal: 15, marginBottom: 10 }}>
-              {/* Year Selector */}
-              <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginBottom: 10 }}>
-                <TouchableOpacity onPress={() => setSelectedYear(y => y - 1)} style={{ padding: 10 }}>
-                  <Text style={{ fontSize: 20, color: colors.primary }}>◀</Text>
-                </TouchableOpacity>
-                <Text style={{ fontSize: 18, fontWeight: 'bold', marginHorizontal: 20, color: colors.text }}>{selectedYear}</Text>
-                <TouchableOpacity onPress={() => setSelectedYear(y => y + 1)} style={{ padding: 10 }}>
-                  <Text style={{ fontSize: 20, color: colors.primary }}>▶</Text>
+              {/* Year Selector & Toggle Filter */}
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                {/* Year Controls */}
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <TouchableOpacity onPress={() => setSelectedYear(y => y - 1)} style={{ padding: 10 }}>
+                    <Text style={{ fontSize: 20, color: colors.primary }}>◀</Text>
+                  </TouchableOpacity>
+                  <Text style={{ fontSize: 18, fontWeight: 'bold', marginHorizontal: 10, color: colors.text }}>{selectedYear}</Text>
+                  <TouchableOpacity onPress={() => setSelectedYear(y => y + 1)} style={{ padding: 10 }}>
+                    <Text style={{ fontSize: 20, color: colors.primary }}>▶</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Filter Checkbox */}
+                <TouchableOpacity 
+                  onPress={() => setApplyDateFilters(!applyDateFilters)}
+                  style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.background, padding: 8, borderRadius: 8, borderWidth: 1, borderColor: colors.border }}
+                >
+                  <View style={{ 
+                    width: 20, height: 20, borderWidth: 2, borderColor: colors.primary, 
+                    borderRadius: 4, marginRight: 8, alignItems: 'center', justifyContent: 'center',
+                    backgroundColor: applyDateFilters ? colors.primary : 'transparent' 
+                  }}>
+                    {applyDateFilters && <Text style={{ color: colors.onPrimary, fontSize: 12, fontWeight: 'bold' }}>✓</Text>}
+                  </View>
+                  <Text style={{ color: colors.text, fontSize: 14 }}>Aplicar filtros</Text>
                 </TouchableOpacity>
               </View>
 
