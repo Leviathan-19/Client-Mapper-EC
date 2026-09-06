@@ -11,6 +11,7 @@ import { useAppTheme } from "../../../context/ThemeContext";
 import { ThemedTextInput } from "../../../components/ThemedTextInput";
 import { useRoutes, Route } from "./useRoutes";
 import { createRoutesStyles } from "./styles";
+import { formatLocalDatetime } from "../../../utils/dateUtils";
 
 export const RoutesList: React.FC<any> = ({ navigation }) => {
   const { colors } = useAppTheme();
@@ -53,37 +54,7 @@ export const RoutesList: React.FC<any> = ({ navigation }) => {
   };
 
   const formatDate = (isoString: string | null) => {
-    if (!isoString) return "N/A";
-    try {
-      const date = new Date(isoString);
-      if (isNaN(date.getTime())) return isoString;
-
-      // Si la cadena tiene longitud 10 y no contiene 'T', es solo fecha (YYYY-MM-DD)
-      if (isoString.length === 10 && !isoString.includes("T")) {
-        const [year, month, day] = isoString.split("-").map(Number);
-        const localDate = new Date(year, month - 1, day);
-        return localDate.toLocaleDateString("es-EC", {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-        });
-      }
-
-      // Si es un timestamp completo con hora, mostrar fecha y hora local (hh:mm)
-      const datePart = date.toLocaleDateString("es-EC", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      });
-      const timePart = date.toLocaleTimeString("es-EC", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      });
-      return `${datePart} ${timePart}`;
-    } catch {
-      return isoString;
-    }
+    return formatLocalDatetime(isoString);
   };
 
   const renderItem = ({ item }: { item: Route }) => (

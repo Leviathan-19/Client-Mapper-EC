@@ -17,9 +17,18 @@ import DateTimePicker, {
 } from "@react-native-community/datetimepicker";
 
 import { useRoutes, useRouteVisits, Visit } from "./useRoutes";
-import { styles } from "./styles";
+import { createRoutesStyles } from "./styles";
+import { useAppTheme } from "../../../context/ThemeContext";
+import {
+  getLocalISOString,
+  getLocalDateString,
+  formatLocalDatetime
+} from "../../../utils/dateUtils";
 
 export const RouteDetail: React.FC<any> = ({ route, navigation }) => {
+  const { colors } = useAppTheme();
+  const styles = createRoutesStyles(colors);
+
   const { rutaId, rutaNombre } = route.params;
 
   const visits = useRouteVisits(rutaId);
@@ -204,13 +213,10 @@ export const RouteDetail: React.FC<any> = ({ route, navigation }) => {
 
       if (hasProgDate) {
         if (hasProgTime) {
-          formattedProgDate = progDate.toISOString();
+          formattedProgDate = getLocalISOString(progDate);
         } else {
-          const dateOnly = new Date(progDate);
-
-          dateOnly.setHours(12, 0, 0, 0);
-
-          formattedProgDate = dateOnly.toISOString().split("T")[0];
+          // Extraemos YYYY-MM-DD
+          formattedProgDate = getLocalDateString(progDate);
         }
       }
 
@@ -409,45 +415,9 @@ export const RouteDetail: React.FC<any> = ({ route, navigation }) => {
   // ============================================================
   // FORMATEAR FECHA
   // ============================================================
-
+  
   const formatVisitDate = (isoString: string | null) => {
-    if (!isoString) return "N/A";
-
-    try {
-      const date = new Date(isoString);
-
-      if (isNaN(date.getTime())) {
-        return isoString;
-      }
-
-      if (isoString.length === 10 && !isoString.includes("T")) {
-        const [year, month, day] = isoString.split("-").map(Number);
-
-        const localDate = new Date(year, month - 1, day);
-
-        return localDate.toLocaleDateString("es-EC", {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-        });
-      }
-
-      const datePart = date.toLocaleDateString("es-EC", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      });
-
-      const timePart = date.toLocaleTimeString("es-EC", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      });
-
-      return `${datePart} ${timePart}`;
-    } catch {
-      return isoString;
-    }
+    return formatLocalDatetime(isoString);
   };
 
   // ============================================================

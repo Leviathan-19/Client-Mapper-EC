@@ -4,6 +4,7 @@ import {
 } from "@powersync/react-native";
 import { v4 as uuidv4 } from "uuid";
 import { useSession } from "../../../context/SessionContext";
+import { getLocalISOString, getLocalDateString } from "../../../utils/dateUtils";
 
 export interface Route {
   id: string;
@@ -96,7 +97,7 @@ export const useRoutes = () => {
     if (!empresaId || !usuarioId) throw new Error("No hay sesión activa");
 
     const id = uuidv4();
-    const today = new Date().toISOString().split("T")[0];
+    const today = getLocalDateString();
     await powerSync.execute(
       `INSERT INTO rutas (id, empresa_id, asignado_a, nombre, fecha, estado_ruta, created_at) 
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
@@ -107,7 +108,7 @@ export const useRoutes = () => {
         nombre.trim(),
         today,
         "activa",
-        new Date().toISOString(),
+        getLocalISOString(),
       ],
     );
   };
@@ -135,7 +136,7 @@ export const useRoutes = () => {
         establecimientoId,
         fechaProgramada || null,
         "programada",
-        new Date().toISOString(),
+        getLocalISOString(),
       ],
     );
   };
@@ -148,7 +149,7 @@ export const useRoutes = () => {
     const isCompleted = status === "completada";
     await powerSync.execute(
       `UPDATE visitas SET estado_visita = ?, fecha_realizada = ? WHERE id = ?`,
-      [status, isCompleted ? new Date().toISOString() : null, id],
+      [status, isCompleted ? getLocalISOString() : null, id],
     );
   };
 
@@ -185,7 +186,7 @@ export const useRoutes = () => {
         direccion.trim() || null,
         latitud,
         longitud,
-        new Date().toISOString(),
+        getLocalISOString(),
       ],
     );
     return id;
