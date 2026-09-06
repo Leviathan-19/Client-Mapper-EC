@@ -133,6 +133,19 @@ const mapStyles = {
 
     circleStrokeColor: "#ffffff",
   },
+
+  /**
+   * Texto (Nombres).
+   */
+  symbol: {
+    textField: ["get", "nombre_comercial"],
+    textSize: 12,
+    textColor: "#333333",
+    textHaloColor: "#ffffff",
+    textHaloWidth: 1.5,
+    textOffset: [0, 1.5], // Mostrar debajo del círculo
+    textAnchor: "top",
+  },
 };
 
 /**
@@ -243,42 +256,14 @@ const UserLocationMarker: React.FC = () => {
 };
 
 export const MapView: React.FC<MapViewProps> = ({ items, onPinPress }) => {
-  /**
-   * ============================================================
-   * REFERENCIAS
-   * ============================================================
-   */
-
   const sourceRef = useRef<MapboxGL.GeoJSONSourceRef>(null);
-
   const cameraRef = useRef<MapboxGL.CameraRef>(null);
 
-  /**
-   * ============================================================
-   * ESTADO DE UBICACIÓN
-   * ============================================================
-   */
-
-  /**
-   * Indica si el modo "mi ubicación"
-   * está actualmente activo.
-   */
   const [isLocationEnabled, setIsLocationEnabled] = useState(false);
-
-  /**
-   * Coordenadas actuales del usuario.
-   *
-   * null = no estamos mostrando ubicación.
-   */
   const [userLocation, setUserLocation] = useState<{
     latitude: number;
     longitude: number;
   } | null>(null);
-
-  /**
-   * Evita que se ejecuten simultáneamente
-   * varias consultas GPS.
-   */
   const locationRequestInProgress = useRef(false);
 
   /**
@@ -725,26 +710,50 @@ export const MapView: React.FC<MapViewProps> = ({ items, onPinPress }) => {
           clusterMaxZoom={14}
           onPress={handlePress}
         >
-          {/*
-           * CLUSTERS
-           */}
-
           <MapboxGL.Layer
             id="establecimientosClusters"
             type="circle"
             filter={["has", "point_count"]}
             paint={mapStyles.clusterCircle as any}
           />
-
-          {/*
-           * ESTABLECIMIENTOS INDIVIDUALES
-           */}
-
           <MapboxGL.Layer
             id="establecimientosLayer"
             type="circle"
             filter={["!", ["has", "point_count"]]}
             paint={mapStyles.circle as any}
+          />
+          <MapboxGL.Layer
+            id="establecimientosLabels"
+            type="symbol"
+            minZoomLevel={14}
+            filter={["!", ["has", "point_count"]]}
+            layout={{
+              "text-field": ["get", "nombre_comercial"],
+
+              "text-font": ["Open Sans Regular"],
+
+              "text-size": [
+                "interpolate",
+                ["linear"],
+                ["zoom"],
+                14,
+                11,
+                16,
+                13,
+                18,
+                15,
+              ],
+
+              "text-offset": [0, 1.5],
+              "text-anchor": "top",
+              "text-allow-overlap": false,
+              "text-ignore-placement": false,
+            }}
+            paint={{
+              "text-color": "#222222",
+              "text-halo-color": "#ffffff",
+              "text-halo-width": 2,
+            }}
           />
         </MapboxGL.GeoJSONSource>
 
@@ -752,16 +761,6 @@ export const MapView: React.FC<MapViewProps> = ({ items, onPinPress }) => {
          * =====================================================
          * UBICACIÓN DEL USUARIO
          * =====================================================
-         *
-         * IMPORTANTE:
-         *
-         * Este Marker está FUERA del GeoJSONSource.
-         *
-         * Por lo tanto:
-         *
-         * NO se agrupa.
-         * NO se convierte en cluster.
-         * NO comparte colores con establecimientos.
          */}
 
         {userLocation && (
@@ -773,16 +772,6 @@ export const MapView: React.FC<MapViewProps> = ({ items, onPinPress }) => {
           </MapboxGL.Marker>
         )}
       </MapboxGL.Map>
-
-      {/*
-       * =======================================================
-       * BOTÓN "MI UBICACIÓN"
-       * =======================================================
-       *
-       * Está fuera del Map para poder posicionarlo
-       * como una interfaz de React Native.
-       */}
-
       <TouchableOpacity
         activeOpacity={0.75}
         onPress={toggleUserLocation}
