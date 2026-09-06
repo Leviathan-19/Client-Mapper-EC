@@ -722,6 +722,7 @@ export const MapView: React.FC<MapViewProps> = ({ items, onPinPress }) => {
             filter={["!", ["has", "point_count"]]}
             paint={mapStyles.circle as any}
           />
+
           <MapboxGL.Layer
             id="establecimientosLabels"
             type="symbol"
