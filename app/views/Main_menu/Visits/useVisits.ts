@@ -25,7 +25,7 @@ export interface Visita {
 }
 
 export interface VisitaMapItem extends Establecimiento {
-  ultima_visita?: Visita;
+  visitas: Visita[];
 }
 
 export const useVisits = () => {
@@ -56,12 +56,13 @@ export const useVisits = () => {
   const visitasMapItems = useMemo(() => {
     if (!establecimientos || !visitas) return [];
     
-    // Agrupar visitas por establecimiento, quedándose con la primera (la más reciente por el ORDER BY)
-    const ultimaVisitaPorEstablecimiento = new Map<string, Visita>();
+    // Agrupar TODAS las visitas por establecimiento
+    const visitasPorEstablecimiento = new Map<string, Visita[]>();
     for (const v of visitas) {
-      if (!ultimaVisitaPorEstablecimiento.has(v.establecimiento_id)) {
-        ultimaVisitaPorEstablecimiento.set(v.establecimiento_id, v);
+      if (!visitasPorEstablecimiento.has(v.establecimiento_id)) {
+        visitasPorEstablecimiento.set(v.establecimiento_id, []);
       }
+      visitasPorEstablecimiento.get(v.establecimiento_id)!.push(v);
     }
 
     // Mapear establecimientos, filtrando los que no tienen coords válidas
@@ -72,7 +73,7 @@ export const useVisits = () => {
       
       validItems.push({
         ...e,
-        ultima_visita: ultimaVisitaPorEstablecimiento.get(e.id)
+        visitas: visitasPorEstablecimiento.get(e.id) || []
       });
     }
 
