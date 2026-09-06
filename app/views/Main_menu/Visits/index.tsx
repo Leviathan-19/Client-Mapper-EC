@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from "react";
-import { View, Text, TouchableOpacity, FlatList, Modal } from "react-native";
+import { View, Text, TouchableOpacity, FlatList, Modal, ScrollView } from "react-native";
 import { useAppTheme } from "../../../context/ThemeContext";
 import { ThemedTextInput } from "../../../components/ThemedTextInput";
-import { useVisits, VisitaMapItem } from "./useVisits";
+import { useVisits, VisitaMapItem, Visita } from "./useVisits";
 import { MapView } from "./MapView";
 import { createVisitsStyles } from "./styles";
 
@@ -10,9 +10,17 @@ export const VisitsList: React.FC<any> = ({ navigation }) => {
   const { colors } = useAppTheme();
   const styles = createVisitsStyles(colors);
   const { visitasMapItems, checkInVisit, completeVisit } = useVisits();
+  
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
+  const [isFilterExpanded, setIsFilterExpanded] = useState(false);
   const [visitSearch, setVisitSearch] = useState("");
   const [selectedItem, setSelectedItem] = useState<VisitaMapItem | null>(null);
+
+  const currentYear = new Date().getFullYear();
+  const [selectedYear, setSelectedYear] = useState(currentYear);
+  const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
+
+  const months = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
 
   const getStatusColor = (status: string | undefined) => {
     switch (status) {
@@ -33,17 +41,14 @@ export const VisitsList: React.FC<any> = ({ navigation }) => {
 
   const closeDetail = () => setSelectedItem(null);
 
-  const handleCheckIn = async () => {
-    if (selectedItem?.ultima_visita) {
-      await checkInVisit(selectedItem.ultima_visita.id);
-      closeDetail();
-    }
+  const handleCheckIn = async (visitId: string) => {
+    await checkInVisit(visitId);
+    // El query watched actualizará el estado en background
   };
 
-  const handleComplete = async () => {
-    if (selectedItem?.ultima_visita) {
-      await completeVisit(selectedItem.ultima_visita.id, selectedItem.id);
-      closeDetail();
+  const handleComplete = async (visitId: string) => {
+    if (selectedItem) {
+      await completeVisit(visitId, selectedItem.id);
     }
   };
 
@@ -61,28 +66,49 @@ export const VisitsList: React.FC<any> = ({ navigation }) => {
           {item.estado_comercial || "desconocido"}
         </Text>
       </View>
-      {item.ultima_visita && (
-        <View
-          style={{
-            marginTop: 10,
-            borderTopWidth: 1,
-            borderTopColor: "#eee",
-            paddingTop: 10,
-          }}
-        >
-          <Text style={styles.cardText}>
-            Estado Visita: {item.ultima_visita.estado_visita}
-          </Text>
-        </View>
-      )}
+      <View
+        style={{
+          marginTop: 10,
+          borderTopWidth: 1,
+          borderTopColor: "#eee",
+          paddingTop: 10,
+        }}
+      >
+        <Text style={styles.cardText}>
+          Visitas en este rango: {
+            item.visitas.filter(v => {
+              if (!v.fecha_programada) return false;
+              const d = new Date(v.fecha_programada);
+              if (selectedMonth !== null) {
+                return d.getFullYear() === selectedYear && d.getMonth() === selectedMonth;
+              }
+              return d.getFullYear() === selectedYear;
+            }).length
+          }
+        </Text>
+      </View>
     </TouchableOpacity>
   );
 
   const filteredVisits = useMemo(() => {
-    return visitasMapItems.filter((v) =>
-      v.nombre_comercial?.toLowerCase().includes(visitSearch.toLowerCase()),
-    );
-  }, [visitasMapItems, visitSearch]);
+    return visitasMapItems.filter((v) => {
+      const matchSearch = v.nombre_comercial?.toLowerCase().includes(visitSearch.toLowerCase());
+      
+      const matchDate = v.visitas.some(visita => {
+        if (!visita.fecha_programada) return false;
+        const d = new Date(visita.fecha_programada);
+        const y = d.getFullYear();
+        const m = d.getMonth();
+        
+        if (selectedMonth !== null) {
+          return y === selectedYear && m === selectedMonth;
+        }
+        return y === selectedYear;
+      });
+
+      return matchSearch && matchDate;
+    });
+  }, [visitasMapItems, visitSearch, selectedYear, selectedMonth]);
 
   return (
     <View style={styles.container}>
@@ -107,12 +133,62 @@ export const VisitsList: React.FC<any> = ({ navigation }) => {
       </View>
 
       <View style={styles.content}>
-        <ThemedTextInput
-          style={styles.searchBar}
-          placeholder="Buscar establecimiento..."
-          value={visitSearch}
-          onChangeText={setVisitSearch}
-        />
+        {/* Filter Toggle Button */}
+        <TouchableOpacity 
+          style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 10, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border }}
+          onPress={() => setIsFilterExpanded(!isFilterExpanded)}
+        >
+          <Text style={{ fontWeight: 'bold', color: colors.primary, marginRight: 5 }}>
+            {isFilterExpanded ? 'Ocultar Filtros' : 'Mostrar Filtros de Búsqueda y Fecha'}
+          </Text>
+          <Text style={{ fontSize: 12 }}>{isFilterExpanded ? '▲' : '▼'}</Text>
+        </TouchableOpacity>
+
+        {isFilterExpanded && (
+          <View style={{ backgroundColor: colors.surface, paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: colors.border, elevation: 2, zIndex: 5 }}>
+            <ThemedTextInput
+              style={styles.searchBar}
+              placeholder="Buscar establecimiento..."
+              value={visitSearch}
+              onChangeText={setVisitSearch}
+            />
+            
+            <View style={{ marginHorizontal: 15, marginBottom: 10 }}>
+              {/* Year Selector */}
+              <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginBottom: 10 }}>
+                <TouchableOpacity onPress={() => setSelectedYear(y => y - 1)} style={{ padding: 10 }}>
+                  <Text style={{ fontSize: 20, color: colors.primary }}>◀</Text>
+                </TouchableOpacity>
+                <Text style={{ fontSize: 18, fontWeight: 'bold', marginHorizontal: 20, color: colors.text }}>{selectedYear}</Text>
+                <TouchableOpacity onPress={() => setSelectedYear(y => y + 1)} style={{ padding: 10 }}>
+                  <Text style={{ fontSize: 20, color: colors.primary }}>▶</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Month Grid 4x3 */}
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' }}>
+                {months.map((m, i) => (
+                  <TouchableOpacity 
+                    key={m} 
+                    style={{ 
+                      width: '23%', 
+                      margin: '1%', 
+                      paddingVertical: 10, 
+                      backgroundColor: selectedMonth === i ? colors.primary : colors.surface, 
+                      borderRadius: 8, 
+                      alignItems: 'center',
+                      borderWidth: 1,
+                      borderColor: selectedMonth === i ? colors.primary : colors.border
+                    }}
+                    onPress={() => setSelectedMonth(i === selectedMonth ? null : i)}
+                  >
+                    <Text style={{ color: selectedMonth === i ? colors.onPrimary : colors.text }}>{m}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          </View>
+        )}
         {viewMode === "list" ? (
           <FlatList
             data={filteredVisits}
@@ -179,60 +255,61 @@ export const VisitsList: React.FC<any> = ({ navigation }) => {
                   </>
                 )}
 
-                {selectedItem.ultima_visita ? (
-                  <>
-                    <Text style={styles.sectionTitle}>Última Visita</Text>
-                    <Text style={styles.modalText}>
-                      Estado: {selectedItem.ultima_visita.estado_visita}
-                    </Text>
-                    {selectedItem.ultima_visita.fecha_programada && (
-                      <Text style={styles.modalText}>
-                        Programada para:{" "}
-                        {new Date(
-                          selectedItem.ultima_visita.fecha_programada,
-                        ).toLocaleDateString()}
-                      </Text>
-                    )}
-                  </>
+                {selectedItem.visitas && selectedItem.visitas.length > 0 ? (
+                  <ScrollView style={{ maxHeight: 300, marginTop: 10, marginHorizontal: -5 }}>
+                    {selectedItem.visitas.map((visita, index) => (
+                      <View key={visita.id} style={{ padding: 10, margin: 5, backgroundColor: colors.inputBackground, borderRadius: 8, borderWidth: 1, borderColor: colors.border }}>
+                        <Text style={[styles.sectionTitle, { marginTop: 0 }]}>Visita {selectedItem.visitas.length - index}</Text>
+                        
+                        {visita.fecha_programada && (
+                          <Text style={styles.modalText}>
+                            Programada: {new Date(visita.fecha_programada).toLocaleDateString()}
+                          </Text>
+                        )}
+                        {visita.fecha_realizada && (
+                          <Text style={styles.modalText}>
+                            Realizada: {new Date(visita.fecha_realizada).toLocaleDateString()}
+                          </Text>
+                        )}
+                        <Text style={styles.modalText}>
+                          Estado: {visita.estado_visita}
+                        </Text>
+                        
+                        <View style={[styles.modalButtons, { marginTop: 15 }]}>
+                          {visita.estado_visita === "programada" && (
+                            <TouchableOpacity
+                              style={[styles.modalButton, styles.checkInButton]}
+                              onPress={() => handleCheckIn(visita.id)}
+                            >
+                              <Text style={styles.modalButtonText}>Check-in GPS</Text>
+                            </TouchableOpacity>
+                          )}
+
+                          {visita.estado_visita === "en_curso" && (
+                            <TouchableOpacity
+                              style={[styles.modalButton, styles.completeButton]}
+                              onPress={() => handleComplete(visita.id)}
+                            >
+                              <Text style={styles.modalButtonText}>Completar</Text>
+                            </TouchableOpacity>
+                          )}
+                        </View>
+                      </View>
+                    ))}
+                  </ScrollView>
                 ) : (
-                  <Text
-                    style={[
-                      styles.modalText,
-                      { marginTop: 15, fontStyle: "italic" },
-                    ]}
-                  >
+                  <Text style={[styles.modalText, { marginTop: 15, fontStyle: "italic" }]}>
                     No hay visitas registradas para este establecimiento.
                   </Text>
                 )}
 
-                <View style={styles.modalButtons}>
+                <View style={[styles.modalButtons, { marginTop: 15 }]}>
                   <TouchableOpacity
                     style={[styles.modalButton, styles.cancelButton]}
                     onPress={closeDetail}
                   >
-                    <Text style={styles.modalButtonText}>Cerrar</Text>
+                    <Text style={styles.modalButtonText}>Cerrar Historial</Text>
                   </TouchableOpacity>
-
-                  {selectedItem.ultima_visita &&
-                    selectedItem.ultima_visita.estado_visita ===
-                      "programada" && (
-                      <TouchableOpacity
-                        style={[styles.modalButton, styles.checkInButton]}
-                        onPress={handleCheckIn}
-                      >
-                        <Text style={styles.modalButtonText}>Check-in GPS</Text>
-                      </TouchableOpacity>
-                    )}
-
-                  {selectedItem.ultima_visita &&
-                    selectedItem.ultima_visita.estado_visita === "en_curso" && (
-                      <TouchableOpacity
-                        style={[styles.modalButton, styles.completeButton]}
-                        onPress={handleComplete}
-                      >
-                        <Text style={styles.modalButtonText}>Completar</Text>
-                      </TouchableOpacity>
-                    )}
                 </View>
               </>
             )}
