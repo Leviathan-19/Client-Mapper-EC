@@ -726,12 +726,11 @@ export const MapView: React.FC<MapViewProps> = ({ items, onPinPress }) => {
           <MapboxGL.Layer
             id="establecimientosLabels"
             type="symbol"
-            minZoomLevel={14}
             filter={["!", ["has", "point_count"]]}
             layout={{
               "text-field": ["get", "nombre_comercial"],
 
-              "text-font": ["Open Sans Regular"],
+              "text-font": ["Noto Sans Regular"],
 
               "text-size": [
                 "interpolate",
@@ -746,14 +745,29 @@ export const MapView: React.FC<MapViewProps> = ({ items, onPinPress }) => {
               ],
 
               "text-offset": [0, 1.5],
+
               "text-anchor": "top",
+
               "text-allow-overlap": false,
+
               "text-ignore-placement": false,
             }}
             paint={{
               "text-color": "#222222",
+
               "text-halo-color": "#ffffff",
+
               "text-halo-width": 2,
+
+              "text-opacity": [
+                "interpolate",
+                ["linear"],
+                ["zoom"],
+                13.5,
+                0,
+                14,
+                1,
+              ],
             }}
           />
         </MapboxGL.GeoJSONSource>
