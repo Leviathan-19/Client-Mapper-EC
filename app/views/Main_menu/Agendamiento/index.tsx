@@ -8,7 +8,11 @@ import {
   ActivityIndicator,
 } from "react-native";
 import * as Location from "expo-location";
-import { useAgendamiento, AgendamientoProduct } from "./useAgendamiento";
+import {
+  useAgendamiento,
+  AgendamientoProduct,
+} from "./useAgendamiento";
+import { getLocalDateString } from "../../../utils/dateUtils";
 import { createAgendamientoStyles } from "./styles";
 import { useAppTheme } from "../../../context/ThemeContext";
 import {
@@ -43,7 +47,7 @@ export const AgendamientoScreen: React.FC<any> = ({ navigation }) => {
   const [newCliTelefono, setNewCliTelefono] = useState<string>("");
 
   const [fechaProgramada, setFechaProgramada] = useState<string>(
-    new Date().toISOString().split("T")[0],
+    getLocalDateString(),
   );
   const [estadoVisita, setEstadoVisita] = useState<string>("programada");
 
