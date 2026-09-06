@@ -107,14 +107,12 @@ export const VisitsList: React.FC<any> = ({ navigation }) => {
       </View>
 
       <View style={styles.content}>
-        {viewMode === "list" && (
-          <ThemedTextInput
-            style={styles.searchBar}
-            placeholder="Buscar establecimiento..."
-            value={visitSearch}
-            onChangeText={setVisitSearch}
-          />
-        )}
+        <ThemedTextInput
+          style={styles.searchBar}
+          placeholder="Buscar establecimiento..."
+          value={visitSearch}
+          onChangeText={setVisitSearch}
+        />
         {viewMode === "list" ? (
           <FlatList
             data={filteredVisits}
