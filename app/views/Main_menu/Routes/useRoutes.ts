@@ -5,6 +5,7 @@ import {
 import { v4 as uuidv4 } from "uuid";
 import { useSession } from "../../../context/SessionContext";
 import { getLocalISOString, getLocalDateString } from "../../../utils/dateUtils";
+import { scheduleVisitNotifications, cancelVisitNotifications } from "../../../notifications/NotificationManager";
 
 export interface Route {
   id: string;
@@ -139,10 +140,19 @@ export const useRoutes = () => {
         getLocalISOString(),
       ],
     );
+
+    if (fechaProgramada) {
+      const ruta = routes.find(r => r.id === rutaId);
+      const est = establishments.find(e => e.id === establecimientoId);
+      if (ruta && est) {
+        await scheduleVisitNotifications(id, est.nombre_comercial, ruta.nombre, fechaProgramada);
+      }
+    }
   };
 
   const deleteVisit = async (id: string) => {
     await powerSync.execute(`DELETE FROM visitas WHERE id = ?`, [id]);
+    await cancelVisitNotifications(id);
   };
 
   const updateVisitStatus = async (id: string, status: string) => {
@@ -151,6 +161,10 @@ export const useRoutes = () => {
       `UPDATE visitas SET estado_visita = ?, fecha_realizada = ? WHERE id = ?`,
       [status, isCompleted ? getLocalISOString() : null, id],
     );
+    
+    if (isCompleted || status === "en_curso" || status === "cancelada") {
+      await cancelVisitNotifications(id);
+    }
   };
 
   const updateVisitDate = async (
@@ -161,6 +175,20 @@ export const useRoutes = () => {
       `UPDATE visitas SET fecha_programada = ? WHERE id = ?`,
       [fechaProgramada, id],
     );
+    
+    if (fechaProgramada) {
+      const result = await powerSync.execute(`SELECT r.nombre as ruta_nombre, e.nombre_comercial 
+        FROM visitas v 
+        LEFT JOIN rutas r ON v.ruta_id = r.id 
+        LEFT JOIN establecimientos e ON v.establecimiento_id = e.id 
+        WHERE v.id = ?`, [id]);
+      if (result.rows?.length && result.rows.length > 0) {
+         const row = result.rows.item(0);
+         await scheduleVisitNotifications(id, row.nombre_comercial || 'N/A', row.ruta_nombre || 'N/A', fechaProgramada);
+      }
+    } else {
+      await cancelVisitNotifications(id);
+    }
   };
 
   const createEstablishment = async (
