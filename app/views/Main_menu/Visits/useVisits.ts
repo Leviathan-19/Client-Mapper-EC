@@ -3,6 +3,7 @@ import { useSession } from '../../../context/SessionContext';
 import { useMemo } from 'react';
 import * as Location from 'expo-location';
 import { Alert } from 'react-native';
+import { cancelVisitNotifications } from '../../../notifications/NotificationManager';
 
 export interface Establecimiento {
   id: string;
@@ -113,6 +114,9 @@ export const useVisits = () => {
         `UPDATE establecimientos SET estado_comercial = 'atendido' WHERE id = ?`,
         [establecimientoId]
       );
+
+      // Cancelar notificaciones pendientes
+      await cancelVisitNotifications(visitId);
       
     } catch (e: any) {
       Alert.alert('Error', e.message);
