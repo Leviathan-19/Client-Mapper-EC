@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from "uuid";
 import { useSession } from "../../../context/SessionContext";
 
 import { getLocalDateString } from "../../../utils/dateUtils";
+import { scheduleVisitNotifications } from "../../../notifications/NotificationManager";
 
 export interface AgendamientoProduct {
   id: string;
@@ -60,8 +61,22 @@ export const useAgendamiento = () => {
     if (!empresaId || !usuarioId) throw new Error("No session active");
 
     let finalRutaId = rutaId;
-    let finalClienteId = clienteId;
     let finalEstablecimientoId = establecimientoId;
+    let finalClienteId = clienteId;
+    
+    let finalRutaNombre = newRutaNombre;
+    if (rutaId) {
+      const r = rutas.find((x: any) => x.id === rutaId);
+      if (r) finalRutaNombre = r.nombre;
+    }
+    
+    let finalEstNombre = newEstablecimiento.nombre;
+    if (establecimientoId) {
+      const e = establecimientos.find((x: any) => x.id === establecimientoId);
+      if (e) finalEstNombre = e.nombre_comercial;
+    }
+    
+    let createdVisitaId = "";
 
     // Use a transaction to ensure all or nothing
     await powerSync.writeTransaction(async (tx) => {
@@ -134,6 +149,7 @@ export const useAgendamiento = () => {
           visitaDetails.estado,
         ],
       );
+      createdVisitaId = visitaId;
 
       // 5. Create Visit Products
       for (const prod of selectedProducts) {
@@ -152,6 +168,10 @@ export const useAgendamiento = () => {
         );
       }
     });
+
+    if (createdVisitaId && visitaDetails.estado === 'programada' && visitaDetails.fecha_programada) {
+      await scheduleVisitNotifications(createdVisitaId, finalEstNombre, finalRutaNombre, visitaDetails.fecha_programada);
+    }
   };
 
   return {
