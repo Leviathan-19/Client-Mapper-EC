@@ -1,14 +1,19 @@
 import 'react-native-get-random-values';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { PowerSyncContext } from '@powersync/react-native';
 import { powerSync } from './powerSync';
 import { AppNavigator } from './navigation/AppNavigator';
 import { SessionProvider } from './context/SessionContext';
 import { ThemeProvider, useAppTheme } from './context/ThemeContext';
+import { requestNotificationPermissions } from './notifications/NotificationManager';
 
 function AppContent() {
   const { isDarkMode, colors } = useAppTheme();
+
+  useEffect(() => {
+    requestNotificationPermissions();
+  }, []);
 
   return (
     <>
