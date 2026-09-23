@@ -73,11 +73,10 @@ export const connector = {
 
 /**
  * Función para inicializar la sincronización de red.
- * Llama a esta función después de verificar la whitelist del dispositivo.
+ * La reconexión es gestionada de manera global por ConnectivityContext.
  */
 export const startSync = async () => {
-  // Conecta la base SQLite con el servicio en la nube
-  await powerSync.connect(connector);
+  console.log('[PowerSync] startSync invocado, pero la conexión es gestionada por ConnectivityContext.');
 };
 
 export default powerSync;
