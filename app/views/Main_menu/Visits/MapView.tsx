@@ -33,6 +33,10 @@ const LOCATION_UPDATE_INTERVAL = 30_000;
 interface MapViewProps {
   items: VisitaMapItem[];
   onPinPress: (item: VisitaMapItem) => void;
+  isEditingLocation?: boolean;
+  onMapLongPress?: (coordinates: [number, number]) => void;
+  onConfirmLocation?: (coordinates: [number, number]) => void;
+  onCancelLocation?: () => void;
 }
 
 /**
@@ -255,7 +259,14 @@ const UserLocationMarker: React.FC = () => {
   );
 };
 
-export const MapView: React.FC<MapViewProps> = ({ items, onPinPress }) => {
+export const MapView: React.FC<MapViewProps> = ({ 
+  items, 
+  onPinPress,
+  isEditingLocation,
+  onMapLongPress,
+  onConfirmLocation,
+  onCancelLocation
+}) => {
   const sourceRef = useRef<MapboxGL.GeoJSONSourceRef>(null);
   const cameraRef = useRef<MapboxGL.CameraRef>(null);
 
@@ -264,6 +275,7 @@ export const MapView: React.FC<MapViewProps> = ({ items, onPinPress }) => {
     latitude: number;
     longitude: number;
   } | null>(null);
+  const [currentMapCenter, setCurrentMapCenter] = useState<[number, number] | null>(null);
   const locationRequestInProgress = useRef(false);
 
   /**
@@ -679,6 +691,17 @@ export const MapView: React.FC<MapViewProps> = ({ items, onPinPress }) => {
         onDidFailLoadingMap={(event) => {
           console.log("🔴 Error cargando mapa:", event.nativeEvent);
         }}
+        onLongPress={(feature) => {
+          const coords = feature.geometry?.coordinates;
+          if (coords && onMapLongPress) {
+            onMapLongPress(coords as [number, number]);
+          }
+        }}
+        onRegionDidChange={(e) => {
+          if (isEditingLocation && e.geometry?.coordinates) {
+            setCurrentMapCenter(e.geometry.coordinates as [number, number]);
+          }
+        }}
       >
         {/*
          * =====================================================
@@ -806,6 +829,32 @@ export const MapView: React.FC<MapViewProps> = ({ items, onPinPress }) => {
           🌐
         </Text>
       </TouchableOpacity>
+
+      {isEditingLocation && (
+        <View style={styles.centerPinContainer} pointerEvents="none">
+          <Text style={{ fontSize: 40 }}>📍</Text>
+        </View>
+      )}
+
+      {isEditingLocation && (
+        <View style={styles.editControlsContainer}>
+          <TouchableOpacity style={[styles.editButton, { backgroundColor: '#d9534f' }]} onPress={onCancelLocation}>
+            <Text style={styles.editButtonText}>Cancelar</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.editButton, { backgroundColor: '#28a745' }]} 
+            onPress={() => {
+              if (currentMapCenter) {
+                onConfirmLocation?.(currentMapCenter);
+              } else {
+                Alert.alert("Aviso", "Mueve el mapa levemente para detectar el centro.");
+              }
+            }}
+          >
+            <Text style={styles.editButtonText}>Confirmar</Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 };
@@ -824,6 +873,39 @@ const styles = StyleSheet.create({
 
   map: {
     flex: 1,
+  },
+
+  centerPinContainer: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: [{ translateX: -20 }, { translateY: -40 }],
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+
+  editControlsContainer: {
+    position: 'absolute',
+    bottom: 30,
+    left: 20,
+    right: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    zIndex: 10,
+  },
+
+  editButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    elevation: 3,
+  },
+
+  editButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
 
   /**
