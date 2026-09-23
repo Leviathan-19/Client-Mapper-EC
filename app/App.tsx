@@ -8,6 +8,8 @@ import { SessionProvider } from './context/SessionContext';
 import { ThemeProvider, useAppTheme } from './context/ThemeContext';
 import { requestNotificationPermissions } from './notifications/NotificationManager';
 
+import { ConnectivityProvider } from './context/ConnectivityContext';
+
 function AppContent() {
   const { isDarkMode, colors } = useAppTheme();
 
@@ -29,11 +31,13 @@ function AppContent() {
 export default function App() {
   return (
     <PowerSyncContext.Provider value={powerSync}>
-      <ThemeProvider>
-        <SessionProvider>
-          <AppContent />
-        </SessionProvider>
-      </ThemeProvider>
+      <ConnectivityProvider>
+        <ThemeProvider>
+          <SessionProvider>
+            <AppContent />
+          </SessionProvider>
+        </ThemeProvider>
+      </ConnectivityProvider>
     </PowerSyncContext.Provider>
   );
 }
