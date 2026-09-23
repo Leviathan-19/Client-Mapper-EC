@@ -13,17 +13,22 @@ import { useVisits, VisitaMapItem, Visita } from "./useVisits";
 import { MapView } from "./MapView";
 import { createVisitsStyles } from "./styles";
 import { formatLocalDate } from "../../../utils/dateUtils";
+import { Picker } from "@react-native-picker/picker";
 
 export const VisitsList: React.FC<any> = ({ navigation }) => {
   const { colors } = useAppTheme();
   const styles = createVisitsStyles(colors);
-  const { visitasMapItems, checkInVisit, completeVisit } = useVisits();
+  const { visitasMapItems, rutas, checkInVisit, completeVisit, updateEstablecimientoLocation } = useVisits();
 
-  const [viewMode, setViewMode] = useState<"list" | "map">("list");
+  const [viewMode, setViewMode] = useState<"list" | "map">("map");
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
-  const [applyDateFilters, setApplyDateFilters] = useState(true);
+  const [applyDateFilters, setApplyDateFilters] = useState(false);
   const [visitSearch, setVisitSearch] = useState("");
+  const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<VisitaMapItem | null>(null);
+  
+  const [isEditingLocation, setIsEditingLocation] = useState(false);
+  const [editingEstablishmentId, setEditingEstablishmentId] = useState<string | null>(null);
 
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState(currentYear);
@@ -122,27 +127,29 @@ export const VisitsList: React.FC<any> = ({ navigation }) => {
         ?.toLowerCase()
         .includes(visitSearch.toLowerCase());
 
-      if (!applyDateFilters) {
-        return matchSearch; // Si el filtro de fechas está apagado, mostramos todos los que coincidan con la búsqueda
+      const matchRoute = selectedRouteId === null || v.visitas.some((visita) => visita.ruta_id === selectedRouteId);
+
+      let matchDate = true;
+      if (applyDateFilters) {
+        matchDate = v.visitas.some((visita) => {
+          if (!visita.fecha_programada) return false;
+          const d = new Date(visita.fecha_programada);
+          const y = d.getFullYear();
+          const m = d.getMonth();
+
+          if (selectedMonth !== null) {
+            return y === selectedYear && m === selectedMonth;
+          }
+          return y === selectedYear;
+        });
       }
 
-      const matchDate = v.visitas.some((visita) => {
-        if (!visita.fecha_programada) return false;
-        const d = new Date(visita.fecha_programada);
-        const y = d.getFullYear();
-        const m = d.getMonth();
-
-        if (selectedMonth !== null) {
-          return y === selectedYear && m === selectedMonth;
-        }
-        return y === selectedYear;
-      });
-
-      return matchSearch && matchDate;
+      return matchSearch && matchRoute && matchDate;
     });
   }, [
     visitasMapItems,
     visitSearch,
+    selectedRouteId,
     selectedYear,
     selectedMonth,
     applyDateFilters,
@@ -209,6 +216,27 @@ export const VisitsList: React.FC<any> = ({ navigation }) => {
               zIndex: 5,
             }}
           >
+            <View style={{ marginHorizontal: 15, marginTop: 10, marginBottom: 5 }}>
+              <Text style={{ color: colors.text, marginBottom: 5, fontWeight: 'bold' }}>Ruta:</Text>
+              <View style={{ borderWidth: 1, borderColor: colors.border, borderRadius: 8, backgroundColor: colors.inputBackground }}>
+                <Picker
+                  selectedValue={selectedRouteId}
+                  onValueChange={(itemValue) => setSelectedRouteId(itemValue)}
+                  style={{ color: colors.text }}
+                  dropdownIconColor={colors.text}
+                >
+                  <Picker.Item label="Todas las rutas" value={null} />
+                  {rutas.map((r) => (
+                    <Picker.Item 
+                      key={r.id} 
+                      label={`${r.nombre} ${r.fecha ? `(${formatLocalDate(r.fecha)})` : ''}`} 
+                      value={r.id} 
+                    />
+                  ))}
+                </Picker>
+              </View>
+            </View>
+
             <ThemedTextInput
               style={styles.searchBar}
               placeholder="Buscar establecimiento..."
@@ -358,7 +386,23 @@ export const VisitsList: React.FC<any> = ({ navigation }) => {
             }
           />
         ) : (
-          <MapView items={filteredVisits} onPinPress={handlePinPress} />
+          <MapView 
+            items={filteredVisits} 
+            onPinPress={handlePinPress} 
+            isEditingLocation={isEditingLocation}
+            onCancelLocation={() => {
+              setIsEditingLocation(false);
+              setEditingEstablishmentId(null);
+            }}
+            onConfirmLocation={(coords) => {
+              if (editingEstablishmentId) {
+                // GeoJSON/Mapbox: [longitude, latitude]
+                updateEstablecimientoLocation(editingEstablishmentId, coords[1], coords[0]);
+              }
+              setIsEditingLocation(false);
+              setEditingEstablishmentId(null);
+            }}
+          />
         )}
       </View>
 
@@ -408,6 +452,17 @@ export const VisitsList: React.FC<any> = ({ navigation }) => {
                     </Text>
                   </>
                 )}
+
+                <TouchableOpacity
+                  style={[styles.modalButton, { backgroundColor: '#ff9800', marginTop: 10, paddingVertical: 10, borderRadius: 8, alignItems: 'center' }]}
+                  onPress={() => {
+                    setEditingEstablishmentId(selectedItem.id);
+                    setIsEditingLocation(true);
+                    setSelectedItem(null);
+                  }}
+                >
+                  <Text style={[styles.modalButtonText, { fontWeight: 'bold' }]}>✏️ Editar Ubicación</Text>
+                </TouchableOpacity>
 
                 {selectedItem.visitas && selectedItem.visitas.length > 0 ? (
                   <ScrollView
