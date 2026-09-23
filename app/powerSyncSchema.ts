@@ -1,4 +1,4 @@
-import { Schema, column, Table } from '@powersync/react-native';
+import { Schema, column, Table } from "@powersync/react-native";
 
 const empresas = new Table({
   id: column.text,
@@ -6,7 +6,7 @@ const empresas = new Table({
   direccion: column.text,
   nombre: column.text,
   estado: column.text,
-  created_at: column.text
+  created_at: column.text,
 });
 
 const clientes = new Table({
@@ -19,7 +19,7 @@ const clientes = new Table({
   deleted_at: column.text,
   cedula: column.text,
   correo: column.text,
-  telefono: column.text
+  telefono: column.text,
 });
 
 const establecimientos = new Table({
@@ -29,9 +29,11 @@ const establecimientos = new Table({
   direccion: column.text,
   latitud: column.real,
   longitud: column.real,
+  ubicacion_metodo: column.text,
+  ubicacion_actualizada_en: column.text,
   estado_comercial: column.text,
   created_at: column.text,
-  deleted_at: column.text
+  deleted_at: column.text,
 });
 
 const rutas = new Table({
@@ -40,7 +42,7 @@ const rutas = new Table({
   nombre: column.text,
   fecha: column.text,
   estado_ruta: column.text,
-  created_at: column.text
+  created_at: column.text,
 });
 
 const visitas = new Table({
@@ -53,7 +55,7 @@ const visitas = new Table({
   latitud_registro: column.real,
   longitud_registro: column.real,
   created_at: column.text,
-  deleted_at: column.text
+  deleted_at: column.text,
 });
 
 const productos = new Table({
@@ -63,7 +65,7 @@ const productos = new Table({
   descripcion: column.text,
   precio_unitario: column.real,
   activo: column.integer,
-  created_at: column.text
+  created_at: column.text,
 });
 
 const visita_productos = new Table({
@@ -72,7 +74,7 @@ const visita_productos = new Table({
   empresa_id: column.text,
   cantidad: column.integer,
   precio_unitario: column.real,
-  created_at: column.text
+  created_at: column.text,
 });
 
 // Tabla whitelist
@@ -82,7 +84,7 @@ const whitelist = new Table({
   descripcion: column.text,
   created_at: column.text,
   updated_at: column.text,
-  usuario_id: column.text
+  usuario_id: column.text,
 });
 
 // Tabla usuarios
@@ -92,7 +94,7 @@ const usuarios = new Table({
   rol: column.text,
   estado: column.text,
   created_at: column.text,
-  auth_user_id: column.text
+  auth_user_id: column.text,
 });
 
 export const AppSchemaDefinition = new Schema({
@@ -104,5 +106,5 @@ export const AppSchemaDefinition = new Schema({
   productos,
   visita_productos,
   whitelist,
-  usuarios
+  usuarios,
 });
