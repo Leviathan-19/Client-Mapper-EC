@@ -691,15 +691,17 @@ export const MapView: React.FC<MapViewProps> = ({
         onDidFailLoadingMap={(event) => {
           console.log("🔴 Error cargando mapa:", event.nativeEvent);
         }}
-        onLongPress={(feature) => {
+        onLongPress={(e: any) => {
+          const feature = e as any;
           const coords = feature.geometry?.coordinates;
           if (coords && onMapLongPress) {
             onMapLongPress(coords as [number, number]);
           }
         }}
-        onRegionDidChange={(e) => {
-          if (isEditingLocation && e.geometry?.coordinates) {
-            setCurrentMapCenter(e.geometry.coordinates as [number, number]);
+        onRegionDidChange={(e: any) => {
+          const feature = e as any;
+          if (isEditingLocation && feature.geometry?.coordinates) {
+            setCurrentMapCenter(feature.geometry.coordinates as [number, number]);
           }
         }}
       >
