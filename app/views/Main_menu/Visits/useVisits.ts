@@ -19,10 +19,19 @@ export interface Establecimiento {
 
 export interface Visita {
   id: string;
+  ruta_id: string;
+  ruta_nombre?: string;
   establecimiento_id: string;
   fecha_programada: string | null;
   fecha_realizada: string | null;
   estado_visita: string;
+}
+
+export interface RouteFilterOption {
+  id: string;
+  nombre: string;
+  fecha: string | null;
+  estado_ruta: string;
 }
 
 export interface VisitaMapItem extends Establecimiento {
@@ -43,9 +52,25 @@ export const useVisits = () => {
     [empresaId]
   );
 
+  // Consultar todas las rutas de la empresa para el filtro
+  const rutas = usePowerSyncWatchedQuery<RouteFilterOption>(
+    `SELECT id, nombre, fecha, estado_ruta
+     FROM rutas
+     WHERE empresa_id = ?
+     ORDER BY fecha DESC, nombre ASC`,
+    [empresaId]
+  );
+
   // Consultar todas las visitas de las rutas de esta empresa
   const visitas = usePowerSyncWatchedQuery<Visita>(
-    `SELECT v.id, v.establecimiento_id, v.fecha_programada, v.fecha_realizada, v.estado_visita
+    `SELECT 
+       v.id, 
+       v.ruta_id,
+       r.nombre AS ruta_nombre,
+       v.establecimiento_id, 
+       v.fecha_programada, 
+       v.fecha_realizada, 
+       v.estado_visita
      FROM visitas v
      INNER JOIN rutas r ON v.ruta_id = r.id
      WHERE r.empresa_id = ?
@@ -134,10 +159,25 @@ export const useVisits = () => {
     }
   };
 
+  const updateEstablecimientoLocation = async (id: string, latitud: number, longitud: number) => {
+    try {
+      const { getLocalISOString } = require('../../../utils/dateUtils');
+      const now = getLocalISOString();
+      await powerSync.execute(
+        `UPDATE establecimientos SET latitud = ?, longitud = ?, ubicacion_metodo = 'manual', ubicacion_actualizada_en = ? WHERE id = ?`,
+        [latitud, longitud, now, id]
+      );
+    } catch (e: any) {
+      Alert.alert('Error actualizando ubicación', e.message);
+    }
+  };
+
   return {
     visitasMapItems,
+    rutas,
     checkInVisit,
     completeVisit,
-    cancelVisit
+    cancelVisit,
+    updateEstablecimientoLocation
   };
 };
